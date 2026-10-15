@@ -1,0 +1,113 @@
+/* Live CRM design system. The browser-only flow demo retains its own styling. */
+html{--crm-bg:#f5f7fa;--crm-panel:rgba(255,255,255,.88);--crm-panel-strong:rgba(255,255,255,.96);--crm-panel-thin:rgba(255,255,255,.78);--crm-input:#fff;--crm-line:rgba(20,47,38,.13);--crm-text:#1f2937;--crm-subtext:#4b5563;--crm-muted:#6b7280;--crm-accent:#00b35e;--crm-glow:rgba(0,179,94,.17);--crm-hover:rgba(0,179,94,.08);--crm-shadow:0 12px 32px rgba(25,40,32,.1);color-scheme:light}
+html.crm-dark{--crm-bg:#0f1115;--crm-panel:rgba(255,255,255,.08);--crm-panel-strong:rgba(31,37,48,.96);--crm-panel-thin:rgba(255,255,255,.06);--crm-input:#161c24;--crm-line:rgba(255,255,255,.12);--crm-text:#e8eaed;--crm-subtext:#b6bec9;--crm-muted:#9aa4b1;--crm-accent:#00d26a;--crm-glow:rgba(0,210,106,.17);--crm-hover:rgba(0,210,106,.1);--crm-shadow:0 12px 32px rgba(0,0,0,.32);color-scheme:dark}
+html.crm-dark body{background:var(--crm-bg);color:var(--crm-text)}
+#app .live-shell{min-height:100vh;background:radial-gradient(ellipse 60% 40% at 96% 0%,rgba(0,210,106,.065),transparent 80%),radial-gradient(ellipse 45% 45% at 0% 90%,rgba(0,180,216,.045),transparent 85%),var(--crm-bg);color:var(--crm-text);font-size:14px}
+#app .live-shell .live-header{height:64px;min-height:64px;padding:0 24px;background:var(--crm-panel-strong);border-bottom:1px solid var(--crm-line);display:flex;gap:18px;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(0,0,0,.1)}
+#app .live-shell.workspace-active .live-header{position:fixed;top:0;left:0;right:0;z-index:45;backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%)}
+#app .live-shell .brand{width:216px;flex-shrink:0;padding:0;gap:10px;color:var(--crm-text)}
+#app .live-shell .brand-mark{background:linear-gradient(135deg,#00d26a,#0b8065);color:#062217;box-shadow:0 0 20px var(--crm-glow);border-radius:12px}
+#app .live-shell .brand strong{font-size:16px;letter-spacing:.1px;color:var(--crm-text)}
+#app .live-shell .brand small{color:var(--crm-muted);font-size:10px;letter-spacing:.6px}
+.live-header-page{display:flex;align-items:center;gap:10px;flex:1;min-width:120px}
+.live-header-page div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.live-header-page small{font-size:10px;color:var(--crm-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live-header-page strong{font-size:15px;color:var(--crm-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#app .live-shell .live-header-right{gap:12px;min-width:0}
+.live-quick-search{width:min(330px,24vw);height:36px;display:flex;align-items:center;gap:8px;border:1px solid var(--crm-line);border-radius:10px;padding:0 10px;background:var(--crm-input);color:var(--crm-muted)}
+.live-quick-search:focus-within{border-color:var(--crm-accent);box-shadow:0 0 0 3px var(--crm-glow)}
+.live-quick-search input{width:100%;min-width:0;border:0!important;outline:0;background:transparent;color:var(--crm-text);font-size:12px;box-shadow:none!important}
+.live-quick-search input::placeholder{color:var(--crm-muted)}
+.live-quick-search kbd{font-size:10px;font-family:inherit;color:var(--crm-muted);border:1px solid var(--crm-line);border-radius:4px;padding:2px 4px}
+.live-ai-trigger{height:36px;display:flex;align-items:center;gap:7px;white-space:nowrap;padding:0 12px;border:1px solid rgba(0,210,106,.32);background:linear-gradient(135deg,rgba(0,210,106,.13),rgba(0,180,216,.1));border-radius:10px;color:var(--crm-accent);font-size:12px;font-weight:600}
+.live-ai-trigger:hover,.live-ai-trigger[aria-expanded=true]{box-shadow:0 0 18px var(--crm-glow);border-color:var(--crm-accent)}
+#app .live-shell .live-connection{color:var(--crm-muted);white-space:nowrap}
+#app .live-shell .live-connection .connected{background:#00d26a;box-shadow:0 0 0 3px rgba(0,210,106,.13)}
+#app .live-shell .live-theme-toggle{border:1px solid var(--crm-line);width:36px;height:36px;color:var(--crm-subtext)}
+.live-menu-toggle{display:none!important}
+#app .live-shell.workspace-active .live-main{max-width:none;margin:0 0 0 240px;padding:92px 28px 36px;min-width:0;min-height:100vh}
+#app .live-shell:not(.workspace-active) .live-main{padding-top:36px}
+#app .live-shell .live-navigation{position:fixed;top:64px;bottom:0;left:0;z-index:40;width:240px;margin:0;padding:16px 12px 32px;display:flex;flex-direction:column;align-items:stretch;gap:2px;flex-wrap:nowrap;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(ellipse 85% 25% at 0 0,rgba(255,255,255,.09),transparent 75%),var(--crm-panel);border:0;border-right:1px solid var(--crm-line);border-radius:0;box-shadow:var(--crm-shadow);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);scrollbar-width:thin;scrollbar-color:rgba(150,165,160,.35) transparent}
+#app .live-shell .live-navigation button{flex-shrink:0;display:flex;align-items:center;min-height:38px;width:100%;padding:8px 13px;text-align:left;font-size:12px;line-height:1.3;color:var(--crm-subtext);border-radius:9px;border-left:2px solid transparent;transition:background .16s,color .16s,border-color .16s}
+#app .live-shell .live-navigation button:hover{color:var(--crm-text);background:var(--crm-hover)}
+#app .live-shell .live-navigation button.active{color:var(--crm-accent);background:var(--crm-hover);border-left-color:var(--crm-accent);font-weight:600}
+.live-nav-section{font-size:10px;font-weight:600;letter-spacing:1.1px;color:var(--crm-muted);padding:18px 13px 7px;flex-shrink:0}
+.live-nav-section:first-child{padding-top:4px}
+.live-nav-backdrop{display:none}
+#app .live-shell .live-account-bar{margin:0 0 14px;padding:10px 16px;border:1px solid var(--crm-line);border-radius:12px;background:var(--crm-panel-thin);min-height:48px}
+#app .live-shell .live-account-bar>div{min-width:0;flex-wrap:wrap}
+#app .live-shell .live-account-bar span{color:var(--crm-muted)}
+#app .live-shell .live-tenant-bar{padding:12px 16px;margin-bottom:24px;border-radius:12px;border:1px solid var(--crm-line);background:var(--crm-panel-thin)}
+#app .live-shell .live-tenant-bar label{color:var(--crm-muted)}
+#app .live-shell .live-tenant-bar select{background:var(--crm-input);color:var(--crm-text);border:1px solid var(--crm-line);border-radius:8px}
+#app .live-shell :is(h1,h2,h3,strong){color:var(--crm-text)}
+#app .live-shell :is(p,small,label,dt,dd,.muted){color:var(--crm-subtext)}
+#app .live-shell :is(.eyebrow,.page-heading p,.live-customer-source){color:var(--crm-muted)}
+#app .live-shell .page-heading{margin-bottom:20px}
+#app .live-shell .page-heading h1{font-size:22px;font-weight:600;letter-spacing:-.4px}
+#app .live-shell .page-heading p{font-size:12px}
+#app .live-shell .card{background:var(--crm-panel-thin);border:1px solid var(--crm-line);border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,.2);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+#app .live-shell :is(.metric-card,.sales-summary button,.delivery-summary article,.p4c .summary article){background:radial-gradient(ellipse 80% 60% at 0 0,rgba(255,255,255,.12),rgba(255,255,255,.03) 45%,transparent 70%),var(--crm-panel);border:1px solid var(--crm-line);box-shadow:var(--crm-shadow),inset 0 1px rgba(255,255,255,.09);backdrop-filter:blur(28px) saturate(180%);border-radius:16px}
+#app .live-shell :is(.metric-card,.sales-summary button) strong{color:var(--crm-text)}
+#app .live-shell :is(.metric-card,.sales-summary button,.sales-op-card):hover{border-color:rgba(0,210,106,.32);box-shadow:0 8px 24px rgba(0,0,0,.24)}
+#app .live-shell :is(.live-customer-card,.business-data-card,.sales-data,.commerce-block,.p4c .table){background:var(--crm-panel-strong);backdrop-filter:none}
+#app .live-shell :is(.sales-column,.kanban-column){background:var(--crm-panel-thin);border-color:var(--crm-line)}
+#app .live-shell :is(.sales-op-card,.deal-card,.sales-module-grid button,.live-entry-card,.p4-template,.entitlements article){background:var(--crm-input);border:1px solid var(--crm-line);border-radius:12px;color:var(--crm-text)}
+#app .live-shell :is(.sales-module-grid strong,.sales-op-card strong,.sales-op-card b,.delivery-summary strong,.p4c .summary strong){color:var(--crm-text)}
+#app .live-shell :is(.live-entry-guide,.live-login-help,.live-stage-note,.business-note,.sales-filter,.business-filter-note,.delivery-filter,.sales-callout,.commerce-catalog,.commerce-total,.p4-inline,.form-callout){background:var(--crm-panel-thin);border:1px solid var(--crm-line);color:var(--crm-subtext);border-radius:12px}
+#app .live-shell :is(.live-intro h1,.live-intro>p,.live-entry-card span,.live-entry-guide p,.live-stage-note p,.live-login-help p){color:var(--crm-subtext)}
+#app .live-shell .live-intro h1{color:var(--crm-text)}
+#app .live-shell .live-login-card{background:radial-gradient(ellipse 80% 60% at 0 0,rgba(255,255,255,.14),transparent 70%),var(--crm-panel);border:1px solid var(--crm-line);border-radius:20px;box-shadow:var(--crm-shadow);backdrop-filter:blur(32px) saturate(190%);-webkit-backdrop-filter:blur(32px) saturate(190%)}
+#app .live-shell :is(.live-login-card h2,.live-login-card label,.live-login-help strong,.live-entry-card strong){color:var(--crm-text)}
+#app .live-shell :is(.live-login-card p,.live-login-card>small){color:var(--crm-subtext)}
+#app .live-shell :is(input:not([type=checkbox]),select,textarea){background:var(--crm-input);border:1px solid var(--crm-line);color:var(--crm-text);border-radius:10px}
+#app .live-shell :is(input,textarea)::placeholder{color:var(--crm-muted)}
+#app .live-shell :is(input:not([type=checkbox]),select,textarea):focus{border-color:var(--crm-accent)!important;box-shadow:0 0 0 3px var(--crm-glow)}
+#app .live-shell :is(input,select,textarea):disabled{background:var(--crm-panel-thin);color:var(--crm-muted)}
+#app .live-shell .btn.primary{background:var(--crm-accent);border-color:var(--crm-accent);color:#062114;font-weight:600;box-shadow:0 3px 14px var(--crm-glow)}
+#app .live-shell .btn.primary:hover:not(:disabled){background:#15e47b;border-color:#15e47b;box-shadow:0 4px 20px var(--crm-glow)}
+#app .live-shell :is(.btn.secondary,.btn.primary-light){background:var(--crm-panel-thin);border:1px solid var(--crm-line);color:var(--crm-text)}
+#app .live-shell :is(.btn.secondary,.btn.primary-light):hover:not(:disabled){background:var(--crm-hover);border-color:rgba(0,210,106,.32)}
+#app .live-shell .text-button{color:var(--crm-accent)}
+#app .live-shell .text-button:hover{color:#4aeda0}
+#app .live-shell :is(.badge.neutral,.live-roles .badge){background:var(--crm-panel-thin);color:var(--crm-subtext);border:1px solid var(--crm-line)}
+#app .live-shell .badge.green{background:rgba(0,210,106,.13);color:#42e99b}
+#app .live-shell .badge.amber{background:rgba(250,140,22,.13);color:#fbbf70}
+#app .live-shell .badge.red{background:rgba(255,77,79,.13);color:#ff9294}
+#app .live-shell table{font-size:12px;font-variant-numeric:tabular-nums}
+#app .live-shell th{padding:11px 14px;background:var(--crm-panel-thin);border-bottom:1px solid var(--crm-line);color:var(--crm-muted);font-size:11px;letter-spacing:.25px}
+#app .live-shell td{padding:11px 14px;border-bottom:1px solid var(--crm-line);color:var(--crm-subtext);font-size:12px;line-height:1.5}
+#app .live-shell td strong{color:var(--crm-text)}
+#app .live-shell tbody tr:hover{background:var(--crm-hover)}
+#app .live-shell .table-scroll{scrollbar-width:thin;scrollbar-color:rgba(150,165,160,.4) transparent}
+#app .live-shell :is(.live-toolbar,.business-toolbar,.commerce-toolbar,.delivery-toolbar,.p3-bar,.p4c .title){gap:12px}
+#app .live-shell :is(.live-customer-source,.business-data-card td small,.sales-data td small,.p4c .table td small){color:var(--crm-muted)}
+#app .live-shell :is(.live-alert,.business-alert,.sales-alert,.delivery-alert,.commerce-alert,.p3-alert,.p4-alert,.p4c .alert){border-radius:10px}
+#app .live-shell :is(.live-alert.warning,.sales-alert.warning,.p4c .alert.warn){background:rgba(250,140,22,.12);border:1px solid rgba(250,140,22,.3);color:#f4bb74}
+#app .live-shell :is(.live-alert.error,.business-alert.error,.sales-alert.error,.delivery-alert.error,.commerce-alert.error,.p3-alert.bad,.p4-alert.bad,.p4c .alert.bad){background:rgba(255,77,79,.11);border:1px solid rgba(255,77,79,.25);color:#ffb1b2}
+#app .live-shell :is(.live-alert.ok,.business-alert.ok,.sales-alert.ok,.delivery-alert.ok,.commerce-alert.ok,.p3-alert.ok,.p4-alert.ok,.p4c .alert.ok){background:rgba(0,210,106,.1);border:1px solid rgba(0,210,106,.25);color:#70e9a6}
+.live-ai-pane{position:fixed;right:0;top:64px;bottom:0;z-index:41;width:320px;display:flex;flex-direction:column;background:radial-gradient(ellipse 85% 45% at 0 0,rgba(0,210,106,.09),transparent 75%),var(--crm-panel-strong);border-left:1px solid var(--crm-line);box-shadow:-12px 0 40px rgba(0,0,0,.24);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);color:var(--crm-text)}
+.live-ai-pane-head{height:72px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--crm-line)}
+.live-ai-orb{width:35px;height:35px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,210,106,.25),rgba(0,180,216,.22));color:var(--crm-accent)}
+.live-ai-pane-head div{flex:1;display:flex;flex-direction:column;gap:3px}.live-ai-pane-head small{font-size:9px;letter-spacing:1px;color:var(--crm-muted)}.live-ai-pane-head strong{font-size:14px;color:var(--crm-text)}
+.live-ai-pane-body{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:20px;min-height:0}.live-ai-pane-body .eyebrow{font-size:10px;color:var(--crm-muted);letter-spacing:1px}
+.live-ai-context{padding:17px;border:1px solid var(--crm-line);border-radius:14px;background:var(--crm-panel-thin)}.live-ai-context strong{display:block;font-size:16px;color:var(--crm-text);margin:10px 0}.live-ai-context p,.live-ai-disclaimer{font-size:12px;line-height:1.8;color:var(--crm-subtext)}
+.live-ai-tasks>div{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid var(--crm-line);font-size:12px;color:var(--crm-subtext)}.live-ai-tasks svg{color:var(--crm-accent)}
+.live-ai-disclaimer{border-left:2px solid var(--crm-accent);padding-left:11px}
+.live-ai-pane .btn.primary{background:var(--crm-accent);color:#062114;border:1px solid var(--crm-accent);font-weight:600}
+@media(min-width:1600px){#app .live-shell.workspace-active.ai-open .live-main{margin-right:320px}}
+html.crm-dark :is(.modal-backdrop,.commerce-backdrop,.trade-backdrop){background:rgba(0,0,0,.6);backdrop-filter:blur(6px) saturate(140%);-webkit-backdrop-filter:blur(6px) saturate(140%)}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal){background:#1d2631;border:1px solid rgba(255,255,255,.2);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.1);color:var(--crm-text);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%)}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) :is(header,footer,.live-editor-heading,.live-editor-footer,.business-dialog-heading,.business-dialog-footer,.sales-dialog-header,.sales-dialog-footer){background:transparent;border-color:var(--crm-line);color:var(--crm-text)}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) :is(h2,h3,strong,label,p,small,span){color:var(--crm-text)}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) :is(input:not([type=checkbox]),select,textarea){background:var(--crm-input);color:var(--crm-text);border:1px solid var(--crm-line);border-radius:10px}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) :is(input,textarea)::placeholder{color:var(--crm-muted)}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) fieldset:disabled :is(input,select,textarea){background:#19212a;color:var(--crm-muted)}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) .btn.primary{background:var(--crm-accent);border-color:var(--crm-accent);color:#062114}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) .btn.secondary{background:var(--crm-panel-thin);border-color:var(--crm-line);color:var(--crm-text)}
+html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal) :is(.live-customer-access,.live-share-row,.sales-history,.commerce-history li){border-color:var(--crm-line)}
+@media(max-width:1300px){#app .live-shell .live-quick-search{width:210px}#app .live-shell .live-connection{display:none}}
+@media(max-width:1024px){#app .live-shell.workspace-active .live-main{margin-left:0;padding:86px 20px 28px}#app .live-shell .brand{width:auto;min-width:130px}#app .live-shell .live-navigation{width:240px;transform:translateX(-102%);transition:transform .2s;box-shadow:none}#app .live-shell .live-navigation.open{transform:translateX(0);box-shadow:var(--crm-shadow)}.live-menu-toggle{display:flex!important}.live-nav-backdrop{display:block;position:fixed;inset:64px 0 0;z-index:39;background:rgba(0,0,0,.45)}.live-ai-pane{width:min(320px,100vw);z-index:43}}
+@media(max-width:760px){#app .live-shell .live-header{padding:0 14px;gap:9px}#app .live-shell .brand{min-width:0;width:auto}#app .live-shell .brand small{display:none}#app .live-shell .brand strong{font-size:13px}#app .live-shell .brand-mark{width:30px;height:30px}#app .live-shell .live-header-page strong{font-size:12px}#app .live-shell .live-header-page small{display:none}#app .live-shell .live-header-right{gap:5px}.live-quick-search{display:none}.live-ai-trigger{font-size:0;width:34px;justify-content:center;padding:0}.live-ai-trigger svg{width:17px}#app .live-shell.workspace-active .live-main{padding:78px 14px 22px}#app .live-shell .live-account-bar{gap:7px;flex-wrap:wrap}#app .live-shell .live-account-bar>div{gap:7px}#app .live-shell .live-tenant-bar{margin-bottom:20px}#app .live-shell .page-heading h1{font-size:21px}#app .live-shell td,#app .live-shell th{padding:11px 12px}html.crm-dark body :is(.live-editor,.admin-dialog,.business-dialog,.sales-dialog,.commerce-dialog,.delivery-dialog,.trade-dialog,.p3-modal){max-height:calc(100dvh - 28px)}}
+@media(max-width:440px){#app .live-shell .brand strong{display:none}#app .live-shell .live-header-page{min-width:90px}#app .live-shell .live-theme-toggle{width:32px;height:32px}}
+@media(prefers-reduced-motion:reduce){#app .live-shell *,#app .live-shell *::before,#app .live-shell *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
