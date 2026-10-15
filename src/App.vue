@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import Icon from './Icon.vue';
+import WorldClock from './WorldClock.vue';
 import { state, mutate, resetDemo } from './store';
 import * as D from './domain';
 import type { Customer, Lead, Member, Opportunity, Role, Stage, State, Tenant } from './domain';
@@ -160,7 +161,10 @@ onUnmounted(() => { document.removeEventListener('keydown', keydown); if (toastT
         <div class="breadcrumb"><button class="icon-button mobile-toggle" aria-label="打开菜单" @click="mobileMenu = !mobileMenu"><Icon name="menu" /></button><span>{{ screen === 'platform' ? '平台运营' : '企业工作区' }}</span><Icon name="chevron" :size="13" /><strong>{{ titles[view] }}</strong></div>
         <div class="topbar-actions">
           <div v-if="screen === 'tenant'" class="global-search"><Icon name="search" :size="17" /><input v-model="globalSearch" aria-label="搜索当前身份可见的客户或商机" placeholder="搜索客户、商机…" /><span class="search-shortcut">搜索</span><div v-if="globalSearch.trim()" class="search-popover"><button v-for="r in globalResults" :key="r.id" @click="chooseGlobal(r)"><span class="badge neutral">{{ r.type }}</span>{{ r.name }}<Icon name="arrow" :size="14" /></button><div v-if="!globalResults.length" class="empty-small">没有当前身份可见的匹配结果</div></div></div>
+          <WorldClock compact />
           <button class="icon-button" :aria-label="screen === 'platform' ? '查看续费申请' : '查看待办提醒'" @click="navigate(screen === 'platform' ? 'requests' : 'tasks')"><Icon name="bell" /><i v-if="screen === 'platform' ? pendingRequests.length : summary.overdue"></i></button>
+          <button v-if="screen === 'tenant'" class="icon-button" aria-label="查看客户消息" @click="navigate('tasks')"><Icon name="mail" /></button>
+          <details v-if="screen === 'tenant'" class="preview-quick-create"><summary><Icon name="plus" :size="16" />新建<Icon name="down" :size="12" /></summary><div><button @click="openDialog('customer')"><Icon name="users" :size="15" />新建客户</button><button @click="openDialog('lead')"><Icon name="target" :size="15" />新建线索</button><button @click="openDialog('opportunity')"><Icon name="board" :size="15" />新建商机</button><button @click="openDialog('task')"><Icon name="checklist" :size="15" />新建待办</button></div></details>
           <button class="workspace-switch" @click="switchScreen(screen === 'tenant' ? 'platform' : 'tenant')"><Icon :name="screen === 'tenant' ? 'shield' : 'building'" :size="16" /><span>{{ screen === 'tenant' ? '平台演示' : '企业演示' }}</span></button>
           <span class="avatar dark">{{ screen === 'tenant' ? initials(member.name) : '运营' }}</span>
         </div>
