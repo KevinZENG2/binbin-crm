@@ -5,9 +5,10 @@ const db=await PGlite.create();const checks=[];const assert=(name,ok)=>{if(!ok)t
 await db.exec('CREATE ROLE crm_runtime LOGIN NOSUPERUSER NOBYPASSRLS;CREATE ROLE crm_migrator LOGIN NOSUPERUSER NOBYPASSRLS;GRANT USAGE,CREATE ON SCHEMA public TO crm_migrator;GRANT USAGE ON SCHEMA public TO crm_runtime;SET ROLE crm_migrator;');
 const root=new URL('../src/main/resources/db/migration/',import.meta.url),files=(await readdir(root)).filter(x=>/^V\d+__.*\.sql$/.test(x)).sort((a,b)=>Number(a.match(/^V(\d+)/)[1])-Number(b.match(/^V(\d+)/)[1]));
 for(const file of files)await db.exec(await readFile(new URL(file,root),'utf8'));
-assert('V1-V15 migrations apply on an empty PostgreSQL engine',files.length===15);
-let r=await db.query("SELECT count(*)::int AS n FROM information_schema.columns WHERE table_name='sys_role_policy' AND column_name IN('configuration_can_read','configuration_can_manage','portal_account_can_manage')");assert('P4 permissions are part of role policy',r.rows[0].n===3);
+assert('V1-V17 migrations apply on an empty PostgreSQL engine',files.length===17);
+let r=await db.query("SELECT count(*)::int AS n FROM information_schema.columns WHERE table_name='sys_role_policy' AND column_name IN('configuration_can_read','configuration_can_manage','portal_account_can_manage','ai_can_use','ai_can_review')");assert('P4 permissions are part of role policy',r.rows[0].n===5);
 r=await db.query("SELECT count(*)::int AS n FROM pg_tables WHERE schemaname='public' AND tablename IN('sys_tenant_profile','crm_custom_field','crm_custom_value','crm_tag','crm_customer_tag','crm_process_stage','crm_number_rule','crm_approval_rule','crm_dictionary_item','portal_account','portal_session','portal_audit','portal_idempotency')");assert('configuration and portal tables exist',r.rows[0].n===13);
+r=await db.query("SELECT count(*)::int AS n FROM pg_tables WHERE schemaname='public' AND tablename IN('crm_ai_run','crm_ai_feedback','sys_subscription_order','sys_usage_monthly')");assert('AI audit and commercial operation tables exist',r.rows[0].n===4);
 const tenant='40000000-0000-4000-8000-000000000001',user='40000000-0000-4000-8000-000000000100',member='40000000-0000-4000-8000-000000000200',customer='40000000-0000-4000-8000-000000000300';
 await db.query("INSERT INTO iam_user(id,username,display_name,password_hash) VALUES($1,'p4','P4 Admin','not-used')",[user]);
 await db.query("INSERT INTO sys_tenant(id,code,name,status,subscription_end,plan_id) VALUES($1,'p4-test','P4 Test','ACTIVE',now()+interval '1 day','00000000-0000-4000-8000-000000000501')",[tenant]);

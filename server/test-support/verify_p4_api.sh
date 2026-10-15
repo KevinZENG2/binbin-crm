@@ -8,7 +8,7 @@ trap 'rm -rf "$work"' EXIT
 json() { jq -e "$2" "$1" >/dev/null; }
 post() { curl -fsS -b "$work/internal.cookies" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" -H "X-Workspace-ID: $tenant" "$@"; }
 
-curl -fsS "$base/health" | jq -e '.status=="UP" and .version=="0.12.0"' >/dev/null
+curl -fsS "$base/health" | jq -e '.status=="UP" and .version=="0.13.0"' >/dev/null
 login="$(curl -fsS -c "$work/internal.cookies" -H 'Content-Type: application/json' --data "$(jq -nc --arg password "$CRM_TEST_PASSWORD" '{username:"owner",password:$password}')" "$base/auth/login")"
 printf '%s' "$login" > "$work/login.json"
 csrf="$(jq -er '.csrfToken' "$work/login.json")"
@@ -16,7 +16,7 @@ tenant="$(jq -er '.tenants[]|select(.code=="test-1")|.id' "$work/login.json")"
 workspace="$(post --data "$(jq -nc --arg tenant "$tenant" '{tenantId:$tenant}')" "$base/auth/active-tenant")"
 printf '%s' "$workspace" > "$work/workspace.json"
 csrf="$(jq -er '.csrfToken' "$work/workspace.json")"
-json "$work/workspace.json" '.p4Access.configurationRead and .p4Access.configurationManage and .p4Access.portalAccountManage'
+json "$work/workspace.json" '.p4Access.configurationRead and .p4Access.configurationManage and .p4Access.portalAccountManage and .p4Access.aiUse and .p4Access.aiReview'
 
 curl -fsS -b "$work/internal.cookies" -H "X-Workspace-ID: $tenant" "$base/configuration" > "$work/configuration.json"
 json "$work/configuration.json" '.profile.portalEnabled and (.templates|length)>=4 and (.numberRules|length)==5 and (.approvalRule.processType=="QUOTE")'
@@ -46,4 +46,27 @@ json "$work/ticket-1.json" '.typeCode=="GENERAL" and .status=="NEW" and (.sla.st
 curl -fsS -b "$work/portal.cookies" "$base/portal/tickets?pageSize=100" | jq -e --arg id "$(jq -er .id "$work/ticket-1.json")" 'any(.items[];.id==$id)' >/dev/null
 curl -fsS -b "$work/portal.cookies" "$base/portal/knowledge?pageSize=100" | jq -e '.items|type=="array"' >/dev/null
 
-printf '%s\n' 'CRM_P4_API_ACCEPTANCE {"health":"0.12.0","configuration":true,"template":true,"idempotency":true,"portalIdentitySeparated":true,"portalCustomerScope":true,"portalTicket":true,"knowledgePublishedOnly":true}'
+curl -fsS -b "$work/internal.cookies" -H "X-Workspace-ID: $tenant" "$base/ai/status" > "$work/ai-status.json"
+json "$work/ai-status.json" '.planEnabled and (.monthlyLimit|type)=="number" and (.monthlyUsed|type)=="number" and (.configured|not)'
+customer_id="$(curl -fsS -b "$work/internal.cookies" -H "X-Workspace-ID: $tenant" "$base/customers/options?pageSize=1&writable=false" | jq -er '.items[0].id')"
+ai_body="$(jq -nc --arg id "$customer_id" '{taskType:"CUSTOMER_SUMMARY",recordId:$id,instructions:"仅用于隔离验收",dataApproved:true}')"
+post -X POST -H 'Idempotency-Key: p4-ai-disabled-acceptance' --data "$ai_body" "$base/ai/runs" > "$work/ai-1.json"
+post -X POST -H 'Idempotency-Key: p4-ai-disabled-acceptance' --data "$ai_body" "$base/ai/runs" > "$work/ai-2.json"
+test "$(jq -er .id "$work/ai-1.json")" = "$(jq -er .id "$work/ai-2.json")"
+json "$work/ai-1.json" '.status=="BLOCKED" and .errorCode=="AI_PROVIDER_NOT_CONFIGURED" and (.resultText==null)'
+
+platform_login="$(curl -fsS -c "$work/platform.cookies" -H 'Content-Type: application/json' --data "$(jq -nc --arg password "$CRM_TEST_PASSWORD" '{username:"platform-operator",password:$password}')" "$base/auth/login")"
+printf '%s' "$platform_login" > "$work/platform-login.json"
+platform_csrf="$(jq -er '.csrfToken' "$work/platform-login.json")"
+curl -fsS -b "$work/platform.cookies" "$base/platform/commercial/overview" > "$work/commercial.json"
+json "$work/commercial.json" '.paymentMode=="MANUAL_ONLY" and (.plans|length)>=1 and (.metrics.activeTenants|type)=="number"'
+plan_id="$(jq -er '.plans[0].id' "$work/commercial.json")"
+due="$(date -u -d '+14 days' +%F)"
+order_body="$(jq -nc --arg tenant "$tenant" --arg plan "$plan_id" --arg due "$due" '{tenantId:$tenant,planId:$plan,periodMonths:1,amountCents:null,dueDate:$due,notes:"P4 隔离验收后取消"}')"
+curl -fsS -b "$work/platform.cookies" -H 'Content-Type: application/json' -H "X-CSRF-Token: $platform_csrf" -H 'Idempotency-Key: p4-commercial-order-acceptance' --data "$order_body" "$base/platform/commercial/orders" > "$work/order-1.json"
+curl -fsS -b "$work/platform.cookies" -H 'Content-Type: application/json' -H "X-CSRF-Token: $platform_csrf" -H 'Idempotency-Key: p4-commercial-order-acceptance' --data "$order_body" "$base/platform/commercial/orders" > "$work/order-2.json"
+test "$(jq -er .id "$work/order-1.json")" = "$(jq -er .id "$work/order-2.json")"
+order_id="$(jq -er .id "$work/order-1.json")";order_version="$(jq -er .version "$work/order-1.json")"
+curl -fsS -b "$work/platform.cookies" -H 'Content-Type: application/json' -H "X-CSRF-Token: $platform_csrf" --data "$(jq -nc --argjson version "$order_version" '{reason:"隔离验收清理",expectedVersion:$version}')" "$base/platform/commercial/orders/$order_id/cancel" | jq -e '.status=="CANCELLED"' >/dev/null
+
+printf '%s\n' 'CRM_P4_API_ACCEPTANCE {"health":"0.13.0","configuration":true,"template":true,"idempotency":true,"portalIdentitySeparated":true,"portalCustomerScope":true,"portalTicket":true,"knowledgePublishedOnly":true,"aiAudit":true,"commercialOperations":true}'

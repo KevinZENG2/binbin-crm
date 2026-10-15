@@ -24,6 +24,8 @@ INTEGRATION_TABLES=set('crm_integration_key crm_integration_nonce crm_webhook_su
 CONFIG_TABLES=set('sys_industry_template sys_tenant_profile crm_custom_field crm_custom_value crm_tag crm_customer_tag crm_process_stage crm_number_rule crm_approval_rule crm_dictionary_item'.split())
 CONFIG_RLS=CONFIG_TABLES-{'sys_industry_template'}
 PORTAL_TABLES=set('portal_account portal_session portal_login_limit portal_audit portal_idempotency'.split())
+AI_TABLES=set('crm_ai_run crm_ai_feedback'.split())
+COMMERCIAL_OPERATIONS_TABLES=set('sys_subscription_order sys_usage_monthly'.split())
 
 def schema_sets(version):
     tables=set(BASE_TABLES);rls=set(BASE_RLS)
@@ -31,11 +33,13 @@ def schema_sets(version):
         if version>=required:tables|=group;rls|=group
     if version>=14:tables|=CONFIG_TABLES;rls|=CONFIG_RLS
     if version>=15:tables|=PORTAL_TABLES
+    if version>=16:tables|=AI_TABLES;rls|=AI_TABLES
+    if version>=17:tables|=COMMERCIAL_OPERATIONS_TABLES
     return tables,rls
 
 def validate_schema(info):
     versions=[str(row[0]) for row in info['migrations']]
-    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,16)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
+    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,18)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
     version=int(versions[-1]);tables,rls=schema_sets(version)
     if set(info['counts'])!=tables:raise RuntimeError('UNEXPECTED_BACKUP_TABLE_SET')
     if {row[0] for row in info['rls']}!=rls or not all(row[1] and row[2] and row[3]=='crm_migrator' for row in info['rls']):raise RuntimeError('RESTORE_RLS_MISMATCH')
@@ -132,7 +136,7 @@ def table_counts(conn):
         cur.execute("SELECT version,success FROM flyway_schema_history ORDER BY installed_rank");migrations=cur.fetchall()
         cur.execute("SELECT relname,relrowsecurity,relforcerowsecurity,pg_get_userbyid(relowner) FROM pg_class WHERE relnamespace='public'::regnamespace AND relrowsecurity ORDER BY relname");rls=cur.fetchall()
     commercial={}
-    verified_tables=COMMERCE_TABLES|APPROVAL_TABLES|CONTRACT_TABLES|RECEIPT_TABLES|SERVICE_TABLES|KNOWLEDGE_TABLES|CAMPAIGN_TABLES|INTEGRATION_TABLES|CONFIG_TABLES|PORTAL_TABLES
+    verified_tables=COMMERCE_TABLES|APPROVAL_TABLES|CONTRACT_TABLES|RECEIPT_TABLES|SERVICE_TABLES|KNOWLEDGE_TABLES|CAMPAIGN_TABLES|INTEGRATION_TABLES|CONFIG_TABLES|PORTAL_TABLES|AI_TABLES|COMMERCIAL_OPERATIONS_TABLES
     for name in sorted(verified_tables&set(tables)):
         sha=hashlib.sha256()
         with conn.cursor() as cur:
@@ -187,7 +191,7 @@ def main():
     valid_preview=not isolated and target.path=='/railway' and prefix=='backups/preview'
     if not target.hostname.endswith('.railway.internal') or not (valid_preview or valid_isolated):raise RuntimeError('PRIVATE_PREVIEW_OR_EXPLICIT_ISOLATED_BACKUP_REQUIRED')
     object_prefix=os.environ.get('CRM_OBJECT_PREFIX','preview') if isolated else 'preview'
-    if isolated and not re.fullmatch(r'p(?:2(?:ab|cd)|3|4ab)-acceptance-\d+',object_prefix):raise RuntimeError('ISOLATED_ATTACHMENT_NAMESPACE_REQUIRED')
+    if isolated and not re.fullmatch(r'p(?:2(?:ab|cd)|3|4(?:ab|full))-acceptance-\d+',object_prefix):raise RuntimeError('ISOLATED_ATTACHMENT_NAMESPACE_REQUIRED')
     key=bytes.fromhex(os.environ['CRM_BACKUP_ENCRYPTION_KEY'])
     if len(key)!=32:raise RuntimeError('BACKUP_KEY_REQUIRED')
     days=int(os.getenv('CRM_BACKUP_RETENTION_DAYS','30'));minimum=int(os.getenv('CRM_BACKUP_MIN_SUCCESSFUL','3'))
