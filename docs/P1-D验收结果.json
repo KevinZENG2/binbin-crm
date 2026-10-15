@@ -1,0 +1,57 @@
+{
+  "phase": "P1-D",
+  "version": "0.6.0",
+  "status": "BUSINESS_FEATURES_DEPLOYED_WITH_DOCUMENTED_REMAINING_SETUP",
+  "date": "2026-10-13",
+  "checks": {
+    "java": 32,
+    "browserLocalDomain": 19,
+    "frontendTypeScriptAndBuild": "PASS",
+    "nativeRegression": {
+      "P0": 45,
+      "P1-A": 61,
+      "P1-B": 87,
+      "P1-C": 123,
+      "total": 316
+    },
+    "nativeNewP1D": 121,
+    "nativeReadOnlyCheckpoint": 11,
+    "publishedHttpsAndResources": 62
+  },
+  "nativeDatabase": "PostgreSQL 18.6",
+  "forcedTenantRlsTables": 17,
+  "flywayMigrations": 5,
+  "javaJdbcTlsVerified": true,
+  "mainDeploymentId": "23d08a99-b247-4c8a-b83a-582ecf83f5de",
+  "suiteDeploymentId": "602e635b-5ed4-4b71-85fa-210feede470c",
+  "readonlyDeploymentId": "1d6b0214-ac28-4310-a997-2c3501e685e0",
+  "originalBusinessWriteTests": false,
+  "unchangedTestPasswordLoginVerified": true,
+  "isolatedBackup": {
+    "status": "PASS",
+    "tables": 33,
+    "rows": 900,
+    "attachmentFiles": 1,
+    "originalPreviewAccess": false,
+    "originalPreviewBackupEnabled": false
+  },
+  "pending": [
+    "Configure production SMTP and verify real delivery",
+    "Connect formal GitHub/container registry and execute prepared CI",
+    "Perform real customer pilot, browser visual and load acceptance",
+    "Agree backup retention, independent key custody and offsite copy"
+  ],
+  "detailsFile": "P1-D完整验收结果.json",
+  "previewBackup": {
+    "enabled": true,
+    "roleCreated": true,
+    "cron": "0 18 * * *",
+    "timezone": "UTC",
+    "localTime": "02:00 Asia/Shanghai",
+    "firstBackupJobId": "2e70bf36-b898-4858-9f7c-87995fcc6fe3",
+    "encryptedObjectRetained": true,
+    "restoredTables": 33,
+    "restoredRows": 279,
+    "attachmentFiles": 0
+  }
+}

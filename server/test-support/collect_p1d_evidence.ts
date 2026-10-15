@@ -1,0 +1,20 @@
+// Read-only checkpoint of the disposable P1-D database.
+import {SQL} from 'bun';
+const target=new URL(Bun.env.DATABASE_URL!);
+if(Bun.env.CRM_P1D_WRITE_SCOPE!=='isolated-new-database'||target.hostname!==Bun.env.CRM_ISOLATED_DATABASE_HOST||target.pathname!=='/crm_acceptance')throw new Error('P1-D private checkpoint required');
+const db=new SQL(Bun.env.DATABASE_URL!),checks:string[]=[];
+function check(name:string,ok:boolean){if(!ok)throw new Error(name);checks.push(name);}
+try{
+ const engine=(await db`SELECT current_database() AS name,version() AS version`)[0];check('checkpoint is native PostgreSQL 18',engine.name==='crm_acceptance'&&engine.version.includes('PostgreSQL 18.'));
+ const role=(await db`SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname='crm_runtime'`)[0];check('runtime cannot bypass RLS',!role.rolsuper&&!role.rolbypassrls);
+ const rls=await db`SELECT relname,relrowsecurity,relforcerowsecurity,pg_get_userbyid(relowner) AS owner FROM pg_class WHERE relnamespace='public'::regnamespace AND relrowsecurity ORDER BY relname`;check('expected tenant tables force RLS',rls.length===Number(Bun.env.CRM_EXPECTED_RLS_COUNT??17)&&rls.every((r:any)=>r.relrowsecurity&&r.relforcerowsecurity&&r.owner==='crm_migrator'));
+ const tenants=await db`SELECT id,code,status,active_member_count,customer_count,attachment_bytes,(SELECT count(*) FROM sys_tenant_member m WHERE m.tenant_id=t.id AND m.status='ACTIVE')::int AS actual_members,(SELECT count(*) FROM crm_customer c WHERE c.tenant_id=t.id)::int AS actual_customers,(SELECT coalesce(sum(size_bytes),0) FROM crm_attachment f WHERE f.tenant_id=t.id AND f.status='READY')::bigint AS actual_bytes FROM sys_tenant t WHERE code LIKE 'p1a-%' OR code LIKE 'p1b-%' OR code LIKE 'p1c-%' OR code LIKE 'p1d-%' ORDER BY code`;
+ check('all eight newly created acceptance companies are paused',tenants.length===8&&tenants.every((t:any)=>t.status==='SUSPENDED'));check('all quota counters equal committed records',tenants.every((t:any)=>Number(t.active_member_count)===Number(t.actual_members)&&Number(t.customer_count)===Number(t.actual_customers)&&Number(t.attachment_bytes)===Number(t.actual_bytes)));
+ const migrations=await db`SELECT version,description,success FROM flyway_schema_history ORDER BY installed_rank`;check('all expected migrations succeeded',migrations.length===Number(Bun.env.CRM_EXPECTED_MIGRATION_COUNT??5)&&migrations.every((m:any)=>m.success));
+ const connections=(await db`SELECT count(*)::int AS total,count(*) FILTER(WHERE ssl)::int AS encrypted FROM pg_stat_ssl WHERE pid IN(SELECT pid FROM pg_stat_activity WHERE usename='crm_runtime' AND application_name='PostgreSQL JDBC Driver')`)[0];check('every Java JDBC connection is encrypted',connections.total>0&&connections.total===connections.encrypted);
+ const faults=await db`SELECT tgname FROM pg_trigger WHERE tgname LIKE '%acceptance%fault%'`;check('temporary fault triggers were removed',faults.length===0);
+ const grants=(await db`SELECT has_table_privilege('crm_runtime','crm_opportunity_history','UPDATE') AS history_update,has_table_privilege('crm_runtime','crm_activity','UPDATE') AS activity_update,has_table_privilege('crm_runtime','crm_attachment','DELETE') AS attachment_delete`)[0];check('runtime preserves immutable histories and logical file deletion',!grants.history_update&&!grants.activity_update&&!grants.attachment_delete);
+ const reset=await db`SELECT count(*)::int AS count,count(*) FILTER(WHERE length(token_hash)=64)::int AS hashes FROM auth_password_reset`;check('reset tokens are stored as hashes',reset.every((r:any)=>r.count===r.hashes));
+ const policies=await db`SELECT count(*)::int AS count FROM sys_role_policy WHERE (attachment_can_write AND NOT attachment_can_read) OR(role_code='VIEWER' AND(import_can_write OR attachment_can_write))`;check('delivery role constraints remain intact',policies[0].count===0);
+ console.log('CRM_RESULT '+JSON.stringify({phase:'P1-D checkpoint',checkpointPassed:checks.length,checks,engine,role,rls,tenants,migrations,connections,grants}));
+}finally{await db.close();}

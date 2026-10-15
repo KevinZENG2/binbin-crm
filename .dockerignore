@@ -1,0 +1,9 @@
+node_modules
+dist
+server/target
+server/test-support
+.git
+.openai
+.env*
+*.log
+__pycache__

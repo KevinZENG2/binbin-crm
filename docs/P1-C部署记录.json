@@ -1,0 +1,155 @@
+{
+  "version": "0.5.0",
+  "projectId": "1807b9ed-791a-4e66-b77a-890d6b802621",
+  "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+  "apiServiceId": "5de432e5-b90a-4f2e-ae7c-149619956985",
+  "url": "https://crm-java-api-crm-test.up.railway.app",
+  "deploymentId": "5a86f62c-cc99-483a-98fd-8ec372fa17a1",
+  "status": "SUCCESS",
+  "releaseSha256": "2cac9d201620a082f743dd984db9fe32e18272e7c76ea76473a2fdbd7c0e4407",
+  "releaseChunks": 19,
+  "build": {
+    "javaPassed": 24,
+    "vueModules": 31
+  },
+  "migration": {
+    "engine": "PostgreSQL 18.6",
+    "previous": "3",
+    "current": "4",
+    "applied": 1,
+    "validated": 4,
+    "seedReinitialized": false
+  },
+  "staticVerification": {
+    "health": {
+      "version": "0.5.0",
+      "status": "UP",
+      "database": "PostgreSQL",
+      "backend": "Java 21 / Spring Boot"
+    },
+    "staticAssets": [
+      {
+        "path": "/",
+        "matches": true,
+        "bytes": 585,
+        "sha256": "af1a26c72002db2de088ac18ad67241a621f5de6cabc10dad6584b10a1b3544f"
+      },
+      {
+        "path": "/assets/index-D7KoMZAK.js",
+        "matches": true,
+        "bytes": 325133,
+        "sha256": "631f1ff9d7eaeee3c2a1cb42fb5b4dbdc0a5cf811e55e3175b5d2cc13d58629b"
+      },
+      {
+        "path": "/assets/index-DJAtwLSn.css",
+        "matches": true,
+        "bytes": 77754,
+        "sha256": "dd12e8f0ef477df51dace13023204ec406a875ff44d42971368d1c8591b95f10"
+      }
+    ],
+    "allMatch": true
+  },
+  "readonlyDeployment": {
+    "id": "6cebc2e1-ca6f-41f0-a8d6-2d067d35848d",
+    "status": "SUCCESS",
+    "createdAt": "2026-10-13T01:31:49.459Z",
+    "updatedAt": "2026-10-13T01:31:53.858Z",
+    "serviceId": "4523cc17-4ccb-40b7-8d26-8147bded22d6",
+    "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+    "url": null,
+    "snapshotId": "4ce1e4be-ae62-4c05-bfb1-99fc62d539b3",
+    "creator": {
+      "id": "27f0adbe-2924-4268-8e1b-0a48f6a07a56",
+      "name": null,
+      "email": "zengb_12@163.com"
+    },
+    "canRollback": true,
+    "canRedeploy": true,
+    "regions": [
+      "iad"
+    ],
+    "meta": {
+      "reason": "deploy",
+      "image": "ghcr.io/railwayapp/function-bun:1.4.0"
+    }
+  },
+  "readonlyResult": {
+    "level": "info",
+    "readonlyPassed": 35,
+    "checks": [
+      "published v0.5 is healthy over HTTPS",
+      "anonymous denied /opportunities",
+      "anonymous denied /tasks",
+      "anonymous denied /activities",
+      "anonymous denied /sales/summary",
+      "normal login owner",
+      "select self workspace",
+      "new module switches available",
+      "GET /sales/summary follows current role",
+      "GET /opportunities follows current role",
+      "/opportunities returns server page",
+      "GET /opportunities/board follows current role",
+      "board exposes all seven stages",
+      "GET /opportunities/owners follows current role",
+      "GET /tasks follows current role",
+      "/tasks returns server page",
+      "GET /tasks/owners follows current role",
+      "GET /activities follows current role",
+      "/activities returns server page",
+      "GET /contacts follows current role",
+      "/contacts returns server page",
+      "GET /leads follows current role",
+      "/leads returns server page",
+      "missing opportunity and history hidden",
+      "opportunity filters validated",
+      "missing task hidden",
+      "task status validated",
+      "four role policies retained",
+      "six P1-C policy switches exposed",
+      "normal login platform-operator",
+      "operator denied without business authority /opportunities",
+      "operator denied without business authority /tasks",
+      "operator denied without business authority /activities",
+      "operator denied without business authority /sales/summary",
+      "workspace mismatch remains protected"
+    ],
+    "businessWrites": false,
+    "version": "0.5.0",
+    "scope": "original preview: login, select own workspace, GET and logout only",
+    "timestamp": "2026-10-13T01:31:52.891412027Z"
+  },
+  "isolatedStopped": {
+    "serviceId": "c991404a-c290-4a65-bdf5-6a9535a2c41e",
+    "deployment": {
+      "id": "e4311d21-4910-4f0d-a4b3-25eb39bdc4b5",
+      "status": "SUCCESS",
+      "createdAt": "2026-10-13T01:28:29.809Z",
+      "updatedAt": "2026-10-13T01:28:38.559Z",
+      "serviceId": "c991404a-c290-4a65-bdf5-6a9535a2c41e",
+      "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+      "url": null,
+      "snapshotId": "576c4e6f-5174-4d8c-b96f-c12ef8a0bcda",
+      "creator": {
+        "id": "27f0adbe-2924-4268-8e1b-0a48f6a07a56",
+        "name": null,
+        "email": "zengb_12@163.com"
+      },
+      "canRollback": true,
+      "canRedeploy": true,
+      "regions": [
+        "iad"
+      ],
+      "meta": {
+        "reason": "deploy",
+        "image": "maven:3.9.11-eclipse-temurin-21"
+      }
+    },
+    "status": "SUCCESS",
+    "processes": "No PostgreSQL or Java started",
+    "volumeCount": 0,
+    "publicDomainCount": 0,
+    "tcpProxyCount": 0,
+    "credentialsCleared": true
+  },
+  "nextPhase": "P1-D"
+}

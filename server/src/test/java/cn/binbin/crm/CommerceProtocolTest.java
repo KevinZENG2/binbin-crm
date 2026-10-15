@@ -1,0 +1,13 @@
+package cn.binbin.crm;
+import static org.assertj.core.api.Assertions.*;
+import java.math.*;
+import java.util.*;
+import org.junit.jupiter.api.Test;
+class CommerceProtocolTest {
+ @Test void approvalIsSeparateFromOrganizationAndQuoteWrite(){var manager=CommerceAccess.defaults(Set.of("SALES_MANAGER"));assertThat(manager.approve()).isTrue();assertThat(CommerceAccess.defaults(Set.of("TENANT_ADMIN")).approve()).isFalse();var readOnlyManager=CommerceAccess.from(List.of(Map.of("role_code","SALES_MANAGER","quote_can_read",true,"quote_can_approve",true,"record_scope","ALL")));assertThat(readOnlyManager.approve()).isTrue();assertThat(readOnlyManager.quotes().write()).isFalse();}
+ @Test void nonManagerOrNoReadCannotAcquireApproval(){for(String role:List.of("SALES","VIEWER","TENANT_ADMIN"))assertThat(CommerceAccess.from(List.of(Map.of("role_code",role,"quote_can_read",true,"quote_can_approve",true,"record_scope","ALL"))).approve()).isFalse();assertThat(CommerceAccess.from(List.of(Map.of("role_code","SALES_MANAGER","quote_can_read",false,"quote_can_approve",true,"record_scope","ALL"))).approve()).isFalse();}
+ @Test void amountsRoundOnceAfterQuantityAndDiscount(){assertThat(QuoteAmounts.line(new BigDecimal("0.5"),101,0)).isEqualTo(51);assertThat(QuoteAmounts.line(new BigDecimal("3.3333"),1999,1250)).isEqualTo(5830);assertThat(QuoteAmounts.line(new BigDecimal("1"),999,10000)).isZero();}
+ @Test void invalidPrecisionBoundsAndOverflowAreRejected(){for(String q:List.of("0","-1","1.00001","1000000.0001"))assertThatThrownBy(()->QuoteAmounts.line(new BigDecimal(q),100,0)).isInstanceOf(ApiError.class);assertThatThrownBy(()->QuoteAmounts.line(BigDecimal.TEN,QuoteAmounts.MAX,0)).isInstanceOf(ApiError.class);assertThatThrownBy(()->QuoteAmounts.add(QuoteAmounts.MAX,1)).isInstanceOf(ApiError.class);}
+ @Test void moduleSwitchesAndScopeAreMergedIndependently(){var a=CommerceAccess.from(List.of(Map.of("quote_can_read",true,"record_scope","ALL"),Map.of("quote_can_read",true,"quote_can_write",true,"record_scope","OWN_SHARED")));assertThat(a.quotes().readAll()).isTrue();assertThat(a.quotes().writeAll()).isFalse();assertThat(a.pdfExport()).isFalse();assertThat(a.productWrite()).isFalse();}
+ @Test void enterpriseAdminHasNoAutomaticCommercialPrivileges(){assertThat(CommerceAccess.defaults(Set.of("TENANT_ADMIN"))).isEqualTo(CommerceAccess.none());var sales=CommerceAccess.defaults(Set.of("SALES"));assertThat(sales.productRead()).isTrue();assertThat(sales.productWrite()).isFalse();assertThat(sales.quotes().write()).isTrue();assertThat(sales.quotes().writeAll()).isFalse();var viewer=CommerceAccess.defaults(Set.of("VIEWER"));assertThat(viewer.quotes().read()).isTrue();assertThat(viewer.quotes().write()).isFalse();assertThat(viewer.pdfExport()).isFalse();}
+}

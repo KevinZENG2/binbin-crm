@@ -1,0 +1,27 @@
+// Supplemental RAM-only PostgreSQL SQL checks. This is not native cloud or concurrency acceptance.
+import {PGlite} from '@electric-sql/pglite';
+import {readFile} from 'node:fs/promises';
+const db=await PGlite.create();const checks=[];
+const assert=(name,ok)=>{if(!ok)throw new Error(name);checks.push(name)};
+await db.exec('CREATE ROLE crm_runtime LOGIN NOSUPERUSER NOBYPASSRLS;CREATE ROLE crm_migrator LOGIN NOSUPERUSER NOBYPASSRLS;GRANT USAGE,CREATE ON SCHEMA public TO crm_migrator;GRANT USAGE ON SCHEMA public TO crm_runtime;SET ROLE crm_migrator;');
+const root=new URL('../src/main/resources/db/migration/',import.meta.url);
+for(const file of ['V1__identity_tenants_and_customer_core.sql','V2__saas_organization_policy_and_subscription.sql'])await db.exec(await readFile(new URL(file,root),'utf8'));
+await db.exec('RESET ROLE;');assert('V1 and V2 migrations apply to empty isolated PostgreSQL engine',true);
+const t='10000000-0000-4000-8000-000000000001',u='10000000-0000-4000-8000-000000000100',m='10000000-0000-4000-8000-000000000200',c='10000000-0000-4000-8000-000000000300';
+await db.query("INSERT INTO iam_user(id,username,display_name,password_hash) VALUES($1,'isolated','Isolated','not-used-for-login')",[u]);
+await db.query("INSERT INTO sys_tenant(id,code,name,status,subscription_end,plan_id) VALUES($1,'isolated','Isolated','ACTIVE',now()+interval '1 day','00000000-0000-4000-8000-000000000501')",[t]);
+await db.query("INSERT INTO sys_tenant_member(id,tenant_id,user_id,display_name) VALUES($1,$2,$3,'Isolated')",[m,t,u]);
+let r=await db.query('SELECT active_member_count FROM sys_tenant WHERE id=$1',[t]);assert('member insertion increments quota counter',r.rows[0].active_member_count===1);
+await db.query("UPDATE sys_tenant_member SET status='DISABLED' WHERE id=$1",[m]);r=await db.query('SELECT active_member_count FROM sys_tenant WHERE id=$1',[t]);assert('membership disable releases quota counter',r.rows[0].active_member_count===0);
+await db.query("UPDATE sys_tenant_member SET status='ACTIVE' WHERE id=$1",[m]);
+await db.exec('BEGIN;');await db.query("SELECT set_config('crm.tenant_id',$1,true)",[t]);await db.exec('SET LOCAL ROLE crm_runtime;');
+await db.query("INSERT INTO crm_customer(id,tenant_id,customer_name,industry,level_code,source_code,owner_member_id) VALUES($1,$2,'Isolated','Test','B','Test',$3)",[c,t,m]);await db.exec('COMMIT;');
+r=await db.query('SELECT customer_count FROM sys_tenant WHERE id=$1',[t]);assert('customer insertion increments quota counter',r.rows[0].customer_count===1);
+await db.exec('SET ROLE crm_runtime;');r=await db.query('SELECT count(*)::int AS count FROM crm_customer');assert('missing context hides customer records',r.rows[0].count===0);
+r=await db.query('SELECT count(*)::int AS count FROM sys_role_policy');assert('missing context hides role policy records',r.rows[0].count===0);
+await db.exec('RESET ROLE;BEGIN;');await db.query("SELECT set_config('crm.tenant_id',$1,true)",[t]);await db.exec('SET LOCAL ROLE crm_runtime;');
+await db.query("INSERT INTO crm_customer(id,tenant_id,customer_name,industry,level_code,source_code,owner_member_id) VALUES($1,$2,'Rollback','Test','B','Test',$3)",['10000000-0000-4000-8000-000000000301',t,m]);await db.exec('ROLLBACK;');
+r=await db.query('SELECT customer_count FROM sys_tenant WHERE id=$1',[t]);assert('rollback restores quota counter atomically',r.rows[0].customer_count===1);
+await db.exec('BEGIN;');await db.query("SELECT set_config('crm.tenant_id',$1,true)",[t]);await db.exec('SET LOCAL ROLE crm_runtime;');
+let rejected=false;try{await db.query("INSERT INTO crm_customer(id,tenant_id,customer_name,industry,level_code,source_code,owner_member_id) VALUES($1,$2,'Foreign','Test','B','Test',$3)",['10000000-0000-4000-8000-000000000302','10000000-0000-4000-8000-000000000002',m]);}catch(e){rejected=e.code==='42501'}await db.exec('ROLLBACK;');assert('RLS denies foreign tenant insertion',rejected);
+console.log(JSON.stringify({isolatedSqlPassed:checks.length,checks,engine:'PostgreSQL WASM, RAM-only; no cloud database writes; no concurrency claim'},null,2));await db.close();

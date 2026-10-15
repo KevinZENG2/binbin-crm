@@ -1,0 +1,497 @@
+{
+  "phase": "P1-D",
+  "version": "0.6.0",
+  "recordedAt": "2026-10-13T08:09:13.588Z",
+  "railway": {
+    "projectId": "1807b9ed-791a-4e66-b77a-890d6b802621",
+    "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+    "environmentName": "crm-test",
+    "apiServiceId": "5de432e5-b90a-4f2e-ae7c-149619956985",
+    "apiUrl": "https://crm-java-api-crm-test.up.railway.app",
+    "finalApiDeploymentId": "23d08a99-b247-4c8a-b83a-582ecf83f5de",
+    "finalApiDeploymentStatus": "SUCCESS",
+    "previousP1DDeploymentId": "d076df19-5388-4b54-a6a1-fffae187dee5",
+    "postgresServiceId": "8ce59ef6-a0e3-4f71-bfbe-eac6f699577e",
+    "postgresDeploymentId": "6831f64e-5096-497f-bc56-0fb44b4a9130",
+    "postgresVolumeUnchanged": true,
+    "publicImage": "maven:3.9.11-eclipse-temurin-21",
+    "newServiceCreated": false,
+    "reminderScheduleEnabled": true,
+    "seedEnabled": false,
+    "smtpEnabled": false
+  },
+  "release": {
+    "sha256": "b72b1538d48363c4f86a973027e7d0aee55e463f8a08290d0aa1ade6d2e155e4",
+    "chunks": 22,
+    "bytes": 196408,
+    "backend": {
+      "server/src/main/java/cn/binbin/crm/ApiController.java": "209a77637e6cc610e26dc0a5ffc414365d5e65eac8b8c08bc6ddbff08718b8d5",
+      "server/src/main/java/cn/binbin/crm/ApiError.java": "2d397dfdb15105a618a8b895e4fdb89252e658357da661b5a3046edc2bb4fdc1",
+      "server/src/main/java/cn/binbin/crm/AttachmentService.java": "18084fc719cdc9146888ebd889083334fcdde7cadd0e5f1d38bcf61f752ffb21",
+      "server/src/main/java/cn/binbin/crm/AuthService.java": "63b0b778bac3d14a4143fc9e7805934cdbca8455899c0eb87fdacc05ba1135f0",
+      "server/src/main/java/cn/binbin/crm/BusinessAccess.java": "88f054c27b0307520108a77c35fb22ff787825f4c1f2ef7bc9b14c11adfaee8c",
+      "server/src/main/java/cn/binbin/crm/BusinessController.java": "892c0a05c016b661588961850730b97943619994bd5a0c9b618bdf5b07988074",
+      "server/src/main/java/cn/binbin/crm/BusinessService.java": "7f1961206a6a428d13dace7b702a7fcaceab6eb6fc7e4e7ac38f2b818f5458a6",
+      "server/src/main/java/cn/binbin/crm/CrmApplication.java": "4b96dfd4f212fd2608852399ddc4f6a578b50ab721b2432fc09602e3d8178e25",
+      "server/src/main/java/cn/binbin/crm/Crypto.java": "733d1dbf2cfa6720f7aab7a6ec3d36915ad82cb2cbbca5bc01b93c56e8a3f3fc",
+      "server/src/main/java/cn/binbin/crm/CsvSupport.java": "49998a7e5134fb2f41adb164558bcc095b2d9abbbf89d066f1633c2155765f55",
+      "server/src/main/java/cn/binbin/crm/CustomerAccess.java": "3ab271938ecd79474296d1e1d3fa3459d83da4d1a00a33c7f03c6d0a750b0549",
+      "server/src/main/java/cn/binbin/crm/CustomerService.java": "b2d28bd9ccf025687784cfa7b04fd84b7d9fcb93f6863a8407d7969e28041e74",
+      "server/src/main/java/cn/binbin/crm/DataService.java": "30cea347a77d6f5ff914f9571e496f4831512e46911f0708e7a2a88fcbd28154",
+      "server/src/main/java/cn/binbin/crm/DatabaseGuard.java": "11707b0d0662ddc63e5522bc6d08124b315a28aa5a0953a50df375ad811f50e5",
+      "server/src/main/java/cn/binbin/crm/DeliveryAccess.java": "ef55a0b44e499fa8a5cac4a6b6b879d678f19999692e69ba09ec7ebd549280b3",
+      "server/src/main/java/cn/binbin/crm/DeliveryController.java": "3e754b6bad5f27473ccf9aeceb8354a8012fc731e35ea3e49de57be6f3131bd4",
+      "server/src/main/java/cn/binbin/crm/DeliveryGuard.java": "761cf238ebee7fd935ed5a75150d38b2a122b23a1e8915558c795c4b05356412",
+      "server/src/main/java/cn/binbin/crm/DevelopmentSeed.java": "d4f1038f837c3b44a0b3825be2836913d3043aa7b57381e3b909bf0ad68f7fc5",
+      "server/src/main/java/cn/binbin/crm/ErrorHandler.java": "7d2fa45e9048e82661a4f848a7d9f9fd0506677301220017f1709c9314cd8bb6",
+      "server/src/main/java/cn/binbin/crm/NotificationService.java": "9c795554f44d671580d92e50c18f72c9948f7f54d20c64a79c918e89fcd51cd7",
+      "server/src/main/java/cn/binbin/crm/ObjectStore.java": "4ba7bfcdbf1d8f70785a7939d9b723f20e0a3879689b55289c1fbc27a96def45",
+      "server/src/main/java/cn/binbin/crm/OperationsService.java": "b76ce08d083d7ab85ec24ba68224865ef7097e79a5dfcbdeaa69d70017f5d497",
+      "server/src/main/java/cn/binbin/crm/Readiness.java": "02be4ebf49ee62def3e0a8db323afa6a4d47846cf7ef428726e235711b32ba29",
+      "server/src/main/java/cn/binbin/crm/RecoveryService.java": "f125a865f4efb5dec98846974e8cae6a1068f958b4f349257861083aaa710f3e",
+      "server/src/main/java/cn/binbin/crm/RequestSafety.java": "cd829fe0a83f94e883057e1942de603df768a3b620cc48c5bd6c6b8d56f51e87",
+      "server/src/main/java/cn/binbin/crm/SaasController.java": "fecc8b7648e4431731905ef2864fbed76de1ffec06454728f613bdb1d2546a6e",
+      "server/src/main/java/cn/binbin/crm/SaasService.java": "a3e32f3d678200e6c8523bc560b5757ae3e1fdae6e4e4b5e56308e7f445f00c4",
+      "server/src/main/java/cn/binbin/crm/SalesController.java": "01b91f414ff1edc2bf4e65d3e478397c74de4a1a177aa431ada0615ca0e8c66f",
+      "server/src/main/java/cn/binbin/crm/SalesService.java": "8c9e6a0598ed6ec3c40674edf8a14fcf86a766219516e7924de043f010b9484f",
+      "server/src/main/resources/application.yml": "0fd527082d3ddfb8dbc9d6755bef4e86269aef018ee3e2075cd93be793f869fc",
+      "server/src/main/resources/db/migration/V1__identity_tenants_and_customer_core.sql": "18ed0e4318a4dcd3e4830e073f41699737b928eefe0df698a1e2a06528211f5f",
+      "server/src/main/resources/db/migration/V2__saas_organization_policy_and_subscription.sql": "0405765c4ff6de52ccc3353d31c8f182c07735d87cb1a458baf81a9da8901808",
+      "server/src/main/resources/db/migration/V3__contacts_leads_and_conversion.sql": "36aa8905f1e2c496c19304d97b782b07b81851c55df2f4467933da6871491abf",
+      "server/src/main/resources/db/migration/V4__opportunities_activities_and_tasks.sql": "ebb0875f4bf691823bd4e08eec2536e7e87278ebb68941d6c2a5fdac601b0a6b",
+      "server/src/main/resources/db/migration/V5__delivery_notifications_and_recovery.sql": "7f05de5edcf6ad04a449641a518020efb1509e0eedf773f2c91fcd23c26c3cc6",
+      "server/src/test/java/cn/binbin/crm/BusinessProtocolTest.java": "0b81bf456008632d42b9c66f907c2268b9196bf2f37977fe01eee9db4e377ad2",
+      "server/src/test/java/cn/binbin/crm/DeliveryProtocolTest.java": "125679d4d008c292d64d13d6fc061c0aeaa5c4bb0cf22e510b8a970d5dd36849",
+      "server/src/test/java/cn/binbin/crm/ProtocolTest.java": "f2553b3b617aaf2580e833a05913df559e1e304c7a0674c70884c6d37f474247",
+      "server/src/test/java/cn/binbin/crm/SaasProtocolTest.java": "bcbdbfbd9dd9b778a8bfaa32a96a8d539973f9ced53f2fff1df1c39d9b548365",
+      "server/src/test/java/cn/binbin/crm/SalesProtocolTest.java": "20f2be2ad65250cad2ec040d5f1555ec42315f5d195489a0177b2f2c8ea3d9f5",
+      "server/pom.xml": "a479ea8be8a90eaad110ad7814ceaff1f94ac071fe97b31090b8c4648270a5af"
+    },
+    "assets": {
+      "assets/index-C8mRLHm7.css": "3bb38c8bdfe34e045a2605b6cc08fd024db88d8bbe5a7b864429d327c8261437",
+      "assets/index-Cloi8ldk.js": "e29233664d7a20f1a67f0c0326112da8cf42b0df84d88ecf64a8a902e45eaca2",
+      "index.html": "1c5064e2c20dc143ba01b496aa2fba606bf687e4a425129f10f2ff3da8b53afb"
+    },
+    "backendMatchesIsolatedValidatedSource": true
+  },
+  "isolated": {
+    "nativeDeploymentId": "21fe9f13-a28d-4a8c-8bd1-79e665cd0aa3",
+    "suiteDeploymentId": "602e635b-5ed4-4b71-85fa-210feede470c",
+    "suiteSourceSha256": "9bb9fc45cd8da8988141eff87beb982c5814145b98783996a4219a5bccced9ab",
+    "nativeSourcePackageSha256": "e71a2535f97d1d8d1bd68d1b1fcd55970749c539a3b459e8d521b090beeeb832",
+    "completion": {
+      "passed": true,
+      "phases": [
+        {
+          "phase": "P0",
+          "passed": 45
+        },
+        {
+          "phase": "P1-A",
+          "passed": 61
+        },
+        {
+          "phase": "P1-B",
+          "passed": 87
+        },
+        {
+          "phase": "P1-C",
+          "passed": 123
+        },
+        {
+          "phase": "P1-D",
+          "passed": 121
+        },
+        {
+          "phase": "P1-D checkpoint",
+          "passed": 11
+        }
+      ],
+      "target": "private disposable PostgreSQL 18",
+      "noOriginalBusinessWrites": true
+    },
+    "cleanupDeploymentId": "6e24f29d-8444-4f5d-9d5e-583be74d4a5d",
+    "temporaryDatabaseHasPersistentVolume": false,
+    "temporaryDatabasePublicEndpoints": 0,
+    "temporaryDatabaseRunningReplicas": 0,
+    "secretsCleared": true
+  },
+  "publishedCheck": {
+    "deploymentId": "1d6b0214-ac28-4310-a997-2c3501e685e0",
+    "passed": 62,
+    "businessWrites": false,
+    "assetsMatched": true,
+    "backupLedgerVisible": true
+  },
+  "backup": {
+    "preparedFiles": [
+      "server/ops/backup.py",
+      "server/ops/restore_backup.py",
+      "server/ops/provision_backup_role.ts",
+      "server/ops/start_backup.sh",
+      "Dockerfile.backup"
+    ],
+    "rehearsalDeploymentId": "15b3ce0c-2826-4ddc-b215-03730cbed140",
+    "rehearsal": {
+      "status": "SUCCESS",
+      "scope": "new disposable acceptance database only",
+      "originalPreviewAccess": false,
+      "sourcePostgresql": 180006,
+      "restoredTables": 33,
+      "restoredRows": 900,
+      "rlsTables": 17,
+      "migrations": 5,
+      "attachmentFilesVerified": 1,
+      "s3Readback": true,
+      "authenticatedDecryption": true,
+      "tamperRejected": true,
+      "runtimeTenantBoundary": true,
+      "encryptedSha256": "b8d03f6a0fe399c11e4a121995966fab4d2d7cbfb9c58572e97b79d523cb9149",
+      "codeSha256": "28d4da062c23622ed6a1ae6187321e7951c7e23560858d77bf714a5dd1a0a53e",
+      "encryptionKeyLogged": false,
+      "temporaryObjectsRemovedAfterCheck": true
+    },
+    "dedicatedPreviewRoleCreated": true,
+    "previewFullBackupEnabled": true,
+    "previewBackupCronEnabled": true,
+    "activationBlockedBy": null,
+    "productionRestorePerformed": false,
+    "authorizationBeforeActivation": {
+      "previousRejection": "Automatic approval rejected creating a persistent crm_backup LOGIN BYPASSRLS cross-tenant read role without explicit authorization",
+      "resolvedByExplicitUserAuthorization": true,
+      "authorizedAt": "2026-10-13T07:32:46Z"
+    },
+    "activation": {
+      "phase": "P1-D backup activation",
+      "version": "0.6.0",
+      "authorizedAt": "2026-10-13T07:32:46Z",
+      "authorization": "User explicitly approved crm_backup persistent cross-tenant/account read (BYPASSRLS), job metadata writes and daily encrypted backups",
+      "recordedAt": "2026-10-13T07:54:19.073Z",
+      "role": {
+        "setupDeploymentId": "8dc03c34-7d1c-478b-b41b-1ccf764d6387",
+        "result": {
+          "role": {
+            "rolname": "crm_backup",
+            "rolsuper": false,
+            "rolbypassrls": true,
+            "rolcreatedb": false,
+            "rolcreaterole": false,
+            "rolinherit": false,
+            "schema_create": false,
+            "job_insert": true,
+            "job_update": true,
+            "job_delete": false
+          },
+          "tables": [
+            {
+              "tablename": "auth_login_limit",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "auth_password_reset",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "auth_reset_limit",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "auth_session",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_activity",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_attachment",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_contact",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_customer",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_customer_share",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_import_batch",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_lead",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_opportunity",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_opportunity_history",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "crm_task",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "flyway_schema_history",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "iam_audit",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "iam_user",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "org_department",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_audit_log",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_control_request",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_idempotency_request",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_job_run",
+              "can_read": true,
+              "can_write": true
+            },
+            {
+              "tablename": "sys_member_role",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_notification",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_object_cleanup",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_plan",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_platform_audit",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_role_policy",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_subscription_request",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_support_access_log",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_support_grant",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_tenant",
+              "can_read": true,
+              "can_write": false
+            },
+            {
+              "tablename": "sys_tenant_member",
+              "can_read": true,
+              "can_write": false
+            }
+          ],
+          "tls": true,
+          "scope": "authorized dedicated preview backup role; no business mutations"
+        },
+        "temporaryAdminCredentialsCleared": true
+      },
+      "worker": {
+        "projectId": "1807b9ed-791a-4e66-b77a-890d6b802621",
+        "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+        "serviceId": "2376373d-f291-4c8c-8e4b-686f7e4cd4b5",
+        "serviceName": "crm-db-bootstrap",
+        "publicImage": "postgres:18",
+        "backupCodeSha256": "6af44a8a682fe4b8029920c9df6befe90f1cbbff342e3b7a734e9173f6972c5a",
+        "noVolume": true,
+        "noPublicDomain": true,
+        "noPublicTcpProxy": true
+      },
+      "firstPreviewBackup": {
+        "deploymentId": "8912c098-6ec6-4866-b2a8-1cd150846049",
+        "result": {
+          "jobId": "2e70bf36-b898-4858-9f7c-87995fcc6fe3",
+          "status": "SUCCESS",
+          "encryptedBytes": 34555,
+          "encryptedSha256": "788ca0093e6182647a2409b6c0aa7d130f9d4fd9f1d168f341079a5574ecd770",
+          "s3Readback": true,
+          "authenticatedDecryption": true,
+          "tamperRejected": true,
+          "attachmentFiles": 0,
+          "restore": {
+            "target": "new disposable PostgreSQL 18 database",
+            "tableCount": 33,
+            "rowCount": 279,
+            "rlsTables": 17,
+            "migrations": 5,
+            "runtimeTenantBoundary": true,
+            "removedAfterCheck": true,
+            "attachmentFilesVerified": 0
+          },
+          "retention": "manual; no automatic deletion"
+        },
+        "encryptedObjectRetained": true,
+        "scope": "existing crm-test railway database and all READY attachment references; current attachment count is zero",
+        "rawSnapshotStoredPublicly": false
+      },
+      "schedule": {
+        "cron": "0 18 * * *",
+        "timezone": "UTC",
+        "displayTime": "02:00 Asia/Shanghai",
+        "deploymentId": "0c18f409-9db0-445f-bc38-80dbf24faa3a",
+        "confirmedState": "cronReady",
+        "runningReplicas": 0,
+        "enabled": true,
+        "nextPlannedRun": "2026-10-14T02:00:00+08:00",
+        "firstScheduledRunObserved": false,
+        "rehearsalOnEveryBackup": true
+      },
+      "protection": {
+        "businessTablesWritable": false,
+        "apiRuntimeBypassRls": false,
+        "encryption": "AES-256-GCM",
+        "keyBits": 256,
+        "keyLocation": "backup service private CRM_BACKUP_ENCRYPTION_KEY variable only",
+        "keyValueIncluded": false,
+        "backupDatabaseRole": "crm_backup",
+        "originalDatabaseRestoredOver": false,
+        "sourcePostgresServiceRestarted": false
+      },
+      "retention": {
+        "automaticDeletion": false,
+        "policy": "manual until retention period is agreed",
+        "independentKeyCustodyPending": true,
+        "offsiteReplicaConfigured": false
+      },
+      "limits": [
+        "Scheduled time has not arrived; manual first execution and settled cron configuration verified",
+        "Current preview has no attachments; previous isolated rehearsal covered one nonempty file",
+        "Restored into a disposable local database only; no production domain switch or manual restore script execution",
+        "No formal SMTP delivery or real customer pilot"
+      ],
+      "supportingDocs": [
+        "P1-D上线运维与试点手册.md",
+        "P1-D开发与云测试交付.md"
+      ],
+      "publishedCheck": {
+        "deploymentId": "1d6b0214-ac28-4310-a997-2c3501e685e0",
+        "passed": 62,
+        "backupLedgerVisible": true,
+        "resourcesMatched": true,
+        "apiDeploymentId": "23d08a99-b247-4c8a-b83a-582ecf83f5de"
+      }
+    }
+  },
+  "sites": {
+    "projectId": "appgprj_6acc791cdc148191aba0f2cf37487718",
+    "url": "https://binbin-crm-preview.zengb-12.chatgpt.site",
+    "audience": "owner-private",
+    "audienceChanged": false,
+    "sourceOpeningCommit": "151c20c23f059121be0a15eb343a025f85dfd91c",
+    "previousPrivateDeploymentId": "appgdep_6acddc5368e08191944cc2b4a0709192",
+    "previousSourceCommit": "7dc08bd54156d7314077fbf191978b31b63de35a"
+  },
+  "ci": {
+    "workflow": ".github/workflows/verify-and-container.yml",
+    "prepared": true,
+    "formalGithubConnected": false,
+    "onlineRunPerformed": false
+  },
+  "limits": [
+    "Browser visual and mouse E2E not performed",
+    "No performance or load test",
+    "No real external SMTP delivery",
+    "Original preview full backup not enabled; crm_backup cross-tenant read permission not approved",
+    "No production data recovery, domain switch or business rollback",
+    "GitHub container workflow prepared but not executed",
+    "No real customer pilot acceptance"
+  ],
+  "cleanup": {
+    "verifierNoopDeploymentId": "b3c894cf-e618-415c-a999-1a485d6cc35f",
+    "nativeNoopDeploymentId": "6e24f29d-8444-4f5d-9d5e-583be74d4a5d",
+    "temporaryServicesRunningReplicas": 0,
+    "temporaryCredentialReferencesCleared": true,
+    "environmentPendingWork": [],
+    "mainApiRunningReplicas": 1,
+    "postgresRunningReplicas": 1,
+    "preActivationBackupWorkerNoopDeploymentId": "91f48e6c-01fc-420b-8483-f10af54eca06",
+    "activeBackupWorkerCronDeploymentId": "0c18f409-9db0-445f-bc38-80dbf24faa3a",
+    "dailyBackupCredentialsRetainedPrivately": true
+  },
+  "retentionFollowup": {
+    "at": "2026-10-13",
+    "codeSha256": "78f664571bc4e0a7e37ae55194d2c06b08a772a666853d09464bcd1f625c3a6b",
+    "deploymentId": "fbeb2c15-b8a7-4ba3-8c19-250e7b38ffb7",
+    "deploymentStatus": "SUCCESS",
+    "cronState": "cronReady",
+    "cronSchedule": "0 18 * * *",
+    "retentionDays": 30,
+    "minimumSuccessful": 3,
+    "localOperationalTests": 15,
+    "actualNewPolicyRunObserved": false,
+    "nextScheduledTime": "2026-10-14T02:00:00+08:00",
+    "keyCustodyCompleted": false,
+    "formalSmtpCompleted": false,
+    "realCustomerPilotCompleted": false,
+    "oldManualRetentionFieldsAreHistorical": true,
+    "detail": "运维增量验收.json"
+  }
+}

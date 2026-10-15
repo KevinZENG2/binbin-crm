@@ -1,0 +1,351 @@
+{
+  "version": "0.3.0",
+  "status": "passed",
+  "authorizedBy": "User message 授权 at 2026-10-12T20:57:44+08:00",
+  "scope": "new isolated native crm_acceptance database only",
+  "sourceCommitBeforeDocumentation": "e6bb3ae77cd30099aa943c920c7cd3f99470d9b5",
+  "releaseSha256": "2a4eda274b32435f0b65e4b51a95291d859a0ee3f855941a367bdfe663d770f0",
+  "isolatedServiceId": "c991404a-c290-4a65-bdf5-6a9535a2c41e",
+  "isolatedDeploymentId": "46436be3-d05a-4530-bd96-547d23750c55",
+  "p0": {
+    "timestamp": "2026-10-12T13:01:53.971458525Z",
+    "deploymentId": "7d782f8f-c5f9-423e-98d4-188215eafe87",
+    "apiPassed": 45,
+    "checks": [
+      "anonymous access denied",
+      "Java/PostgreSQL readiness",
+      "unknown user generic rejection",
+      "login owner",
+      "secure HttpOnly SameSite session",
+      "self tenant discovery",
+      "no active tenant denied",
+      "missing CSRF denied",
+      "authorized tenant switch",
+      "tenant A list scoped",
+      "tenant B detail hidden",
+      "customer persisted",
+      "idempotent create replay",
+      "idempotency content conflict",
+      "client tenant injection rejected",
+      "foreign tenant owner rejected",
+      "versioned customer update",
+      "stale update conflicts",
+      "owner reassignment injection rejected",
+      "page size bounded",
+      "database pagination",
+      "untrusted origin denied",
+      "tenant B switch allowed for member",
+      "tenant B list isolated",
+      "tenant A new record hidden after switch",
+      "login alice",
+      "nonmember tenant switch denied",
+      "sales sees own and shared customers",
+      "other sales detail hidden",
+      "read share cannot edit",
+      "sales cannot assign customer to others",
+      "login viewer",
+      "viewer can read",
+      "viewer cannot create",
+      "login tech-admin",
+      "technical admin has no implicit customer access",
+      "login platform-operator",
+      "operator has no implicit tenant membership",
+      "operator cannot enter tenant",
+      "expired subscription can read",
+      "expired subscription cannot write",
+      "logout revokes session",
+      "logged out session rejected",
+      "login owner",
+      "data survives a new login"
+    ],
+    "acceptanceRecordId": "27f94024-56c2-41bb-968d-c35279c8c29e"
+  },
+  "p1a": {
+    "timestamp": "2026-10-12T13:01:59.891778563Z",
+    "deploymentId": "7d782f8f-c5f9-423e-98d4-188215eafe87",
+    "p1aPassed": 61,
+    "checks": [
+      "fresh independent native database verified before any business writes",
+      "platform has no automatic customer access",
+      "create real plan with integer cents",
+      "plan creation idempotent",
+      "tenant initial member uses one seat",
+      "tenant creation idempotent",
+      "new account requires first password change",
+      "initial password cannot manage organization",
+      "password change invalidates old session",
+      "initial admin has management and sales roles",
+      "departments persisted with parent",
+      "department cycle denied",
+      "concurrent seat allocation permits only one remaining seat",
+      "sales cannot manage members",
+      "tenant member cannot operate platform",
+      "last active tenant admin protected",
+      "concurrent customer allocation permits only one remaining slot",
+      "replay still succeeds at customer quota",
+      "mixed viewer sales roles read all but only write owned records",
+      "role removal immediately shrinks record visibility",
+      "field masking enforced in API",
+      "hidden field write rejected",
+      "permitted core edit preserves hidden fields",
+      "hidden description remains intact in database",
+      "department record scope excludes unassigned manager records",
+      "read share grants only read",
+      "write share does not permit re-delegation or transfer",
+      "share revocation effective immediately",
+      "transfer uses version and changes owner",
+      "occupied department cannot be disabled",
+      "disabled membership immediately denies business access",
+      "re-enable member must respect seat quota",
+      "plan cannot shrink below existing usage",
+      "upgrade releases capacity for reactivation",
+      "viewer credit field hidden and writes denied",
+      "cross tenant department mutation denied",
+      "cross tenant department assignment denied",
+      "stale or forged workspace header denied",
+      "expired subscription blocks organization writes",
+      "expired tenant can request renewal with quoted integer amount",
+      "renewal request idempotent",
+      "only one pending renewal per tenant",
+      "manual renewal requires receipt reference",
+      "confirmation cannot extend subscription twice",
+      "expired renewal extends from current time and preserves counters",
+      "explicit grant opens support workspace",
+      "support reads scoped and masked customer data",
+      "support does not grant organization access",
+      "support cannot write business data",
+      "support reads leave access audit",
+      "support revocation effective immediately",
+      "support sees only explicitly authorized fields",
+      "support expiry effective without re-login",
+      "platform password reset invalidates all existing sessions",
+      "password reset forces change at next login",
+      "tenant management audit records persisted",
+      "audit does not persist test passwords",
+      "transaction counters equal actual database records",
+      "new scoped tables fail closed without context",
+      "platform suspension immediately blocks tenant access",
+      "both newly created fixture tenants paused after acceptance"
+    ],
+    "fixtureTenantIds": [
+      "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+      "dbebf921-de93-42c4-ad0d-34b0fc551ebe"
+    ],
+    "fixturePlanId": "f499965b-8157-461e-a629-5641ecb8992e",
+    "scope": "isolated-new-database"
+  },
+  "checkpoint": {
+    "timestamp": "2026-10-12T13:08:21.627662639Z",
+    "deploymentId": "da994170-1e06-487f-9adc-8fec6ff8df15",
+    "checkpoint": "passed",
+    "engine": {
+      "database": "crm_acceptance",
+      "version": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)"
+    },
+    "assertions": {
+      "runtimeNotSuperuser": true,
+      "sevenTablesForceRls": true,
+      "jdbcUsesTls": true,
+      "bothFixturesSuspended": true,
+      "fixtureCountersMatch": true
+    },
+    "role": {
+      "rolname": "crm_runtime",
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "rls": [
+      {
+        "relname": "crm_customer",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_customer_share",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "org_department",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_audit_log",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_idempotency_request",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_role_policy",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_support_access_log",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      }
+    ],
+    "connections": {
+      "total": 3,
+      "tls": 3
+    },
+    "fixtureTenants": [
+      {
+        "id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "code": "p1a-a-68fcb837",
+        "status": "SUSPENDED",
+        "active_member_count": 3,
+        "customer_count": 2,
+        "actual_members": 3,
+        "actual_customers": 2
+      },
+      {
+        "id": "dbebf921-de93-42c4-ad0d-34b0fc551ebe",
+        "code": "p1a-b-68fcb837",
+        "status": "SUSPENDED",
+        "active_member_count": 1,
+        "customer_count": 0,
+        "actual_members": 1,
+        "actual_customers": 0
+      }
+    ],
+    "platformAudit": [
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "DEPARTMENT_CREATED",
+        "count": 2
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "MEMBER_CREATED",
+        "count": 2
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "MEMBER_UPDATED",
+        "count": 3
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "RENEWAL_CONFIRMED",
+        "count": 1
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "RENEWAL_REQUESTED",
+        "count": 1
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "ROLE_POLICY_UPDATED",
+        "count": 3
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "SUPPORT_ENTERED",
+        "count": 2
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "SUPPORT_EXITED",
+        "count": 2
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "SUPPORT_GRANTED",
+        "count": 2
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "SUPPORT_REVOKED",
+        "count": 1
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "TENANT_CREATED",
+        "count": 1
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "TENANT_SUBSCRIPTION_UPDATED",
+        "count": 1
+      },
+      {
+        "tenant_id": "dbebf921-de93-42c4-ad0d-34b0fc551ebe",
+        "action": "DEPARTMENT_CREATED",
+        "count": 1
+      },
+      {
+        "tenant_id": "dbebf921-de93-42c4-ad0d-34b0fc551ebe",
+        "action": "TENANT_CREATED",
+        "count": 1
+      },
+      {
+        "tenant_id": "dbebf921-de93-42c4-ad0d-34b0fc551ebe",
+        "action": "TENANT_SUBSCRIPTION_UPDATED",
+        "count": 1
+      },
+      {
+        "tenant_id": null,
+        "action": "ACCOUNT_PASSWORD_RESET",
+        "count": 1
+      },
+      {
+        "tenant_id": null,
+        "action": "PLAN_CREATED",
+        "count": 1
+      },
+      {
+        "tenant_id": null,
+        "action": "PLAN_UPDATED",
+        "count": 1
+      }
+    ],
+    "supportAudit": [
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "CUSTOMER_DETAIL",
+        "count": 1
+      },
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "action": "CUSTOMER_LIST",
+        "count": 1
+      }
+    ],
+    "renewals": [
+      {
+        "tenant_id": "227b0f39-8dd5-4173-bbbb-4db39dd0d033",
+        "status": "CONFIRMED",
+        "months": 3,
+        "amount_cents": "37035",
+        "version": "1",
+        "renewed_from": "2026-10-12T13:01:59.161Z",
+        "renewed_until": "2027-01-12T13:01:59.161Z"
+      }
+    ]
+  },
+  "limits": [
+    "Native write acceptance uses PostgreSQL 16.15 and private HTTP; PostgreSQL 18.6 preview was checked read-only over HTTPS",
+    "No browser visual/end-to-end or load benchmark"
+  ],
+  "scripts": [
+    "verify_isolated_guard.ts",
+    "verify_api.ts",
+    "verify_p1a.ts",
+    "collect_isolated_evidence.ts"
+  ]
+}

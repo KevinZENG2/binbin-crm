@@ -1,0 +1,25 @@
+import {PGlite} from '@electric-sql/pglite';
+import {readFile,readdir} from 'node:fs/promises';
+
+const db=await PGlite.create();const checks=[];const assert=(name,ok)=>{if(!ok)throw new Error(name);checks.push(name)};
+await db.exec('CREATE ROLE crm_runtime LOGIN NOSUPERUSER NOBYPASSRLS;CREATE ROLE crm_migrator LOGIN NOSUPERUSER NOBYPASSRLS;GRANT USAGE,CREATE ON SCHEMA public TO crm_migrator;GRANT USAGE ON SCHEMA public TO crm_runtime;SET ROLE crm_migrator;');
+const root=new URL('../src/main/resources/db/migration/',import.meta.url),files=(await readdir(root)).filter(x=>/^V\d+__.*\.sql$/.test(x)).sort((a,b)=>Number(a.match(/^V(\d+)/)[1])-Number(b.match(/^V(\d+)/)[1]));
+for(const file of files)await db.exec(await readFile(new URL(file,root),'utf8'));
+assert('V1-V15 migrations apply on an empty PostgreSQL engine',files.length===15);
+let r=await db.query("SELECT count(*)::int AS n FROM information_schema.columns WHERE table_name='sys_role_policy' AND column_name IN('configuration_can_read','configuration_can_manage','portal_account_can_manage')");assert('P4 permissions are part of role policy',r.rows[0].n===3);
+r=await db.query("SELECT count(*)::int AS n FROM pg_tables WHERE schemaname='public' AND tablename IN('sys_tenant_profile','crm_custom_field','crm_custom_value','crm_tag','crm_customer_tag','crm_process_stage','crm_number_rule','crm_approval_rule','crm_dictionary_item','portal_account','portal_session','portal_audit','portal_idempotency')");assert('configuration and portal tables exist',r.rows[0].n===13);
+const tenant='40000000-0000-4000-8000-000000000001',user='40000000-0000-4000-8000-000000000100',member='40000000-0000-4000-8000-000000000200',customer='40000000-0000-4000-8000-000000000300';
+await db.query("INSERT INTO iam_user(id,username,display_name,password_hash) VALUES($1,'p4','P4 Admin','not-used')",[user]);
+await db.query("INSERT INTO sys_tenant(id,code,name,status,subscription_end,plan_id) VALUES($1,'p4-test','P4 Test','ACTIVE',now()+interval '1 day','00000000-0000-4000-8000-000000000501')",[tenant]);
+await db.exec('BEGIN;');await db.query("SELECT set_config('crm.tenant_id',$1,true)",[tenant]);
+await db.query("INSERT INTO sys_tenant_member(id,tenant_id,user_id,display_name) VALUES($1,$2,$3,'P4 Admin')",[member,tenant,user]);
+await db.query("INSERT INTO crm_customer(id,tenant_id,customer_name,industry,level_code,source_code,owner_member_id) VALUES($1,$2,'Portal Customer','Test','B','Test',$3)",[customer,tenant,member]);
+await db.query("INSERT INTO sys_tenant_profile(tenant_id,brand_name,portal_enabled) VALUES($1,'P4 Brand',true)",[tenant]);
+await db.query("INSERT INTO crm_tag(id,tenant_id,name,color) VALUES('40000000-0000-4000-8000-000000000401',$1,'重点客户','#4F8F6B')",[tenant]);
+await db.query("INSERT INTO crm_dictionary_item(id,tenant_id,dictionary_type,item_code,label) VALUES('40000000-0000-4000-8000-000000000402',$1,'TICKET_TYPE','GENERAL','一般咨询')",[tenant]);
+await db.exec('COMMIT;RESET ROLE;SET ROLE crm_runtime;');
+r=await db.query('SELECT count(*)::int AS n FROM crm_tag');assert('missing tenant context hides P4 tenant configuration',r.rows[0].n===0);
+await db.exec('RESET ROLE;BEGIN;');await db.query("SELECT set_config('crm.tenant_id',$1,true)",[tenant]);await db.exec('SET LOCAL ROLE crm_runtime;');r=await db.query('SELECT count(*)::int AS n FROM crm_tag');assert('matching tenant context exposes only its configuration',r.rows[0].n===1);await db.exec('COMMIT;');
+await db.exec('SET ROLE crm_migrator;');await db.query("INSERT INTO portal_account(id,tenant_id,customer_id,email,email_norm,display_name,password_hash,created_by_member_id) VALUES('40000000-0000-4000-8000-000000000500',$1,$2,'contact@example.test','contact@example.test','Contact','not-used',$3)",[tenant,customer,member]);r=await db.query("SELECT count(*)::int AS n FROM portal_account WHERE tenant_id=$1 AND customer_id=$2",[tenant,customer]);assert('portal identity is bound to one tenant and customer',r.rows[0].n===1);
+let rejected=false;try{await db.query("INSERT INTO portal_account(id,tenant_id,customer_id,email,email_norm,display_name,password_hash,created_by_member_id) VALUES('40000000-0000-4000-8000-000000000501',$1,$2,'Case@Example.Test','wrong@example.test','Bad','not-used',$3)",[tenant,customer,member]);}catch(e){rejected=String(e.message).includes('portal_account_check')||e.code==='23514'}assert('portal email normalization is enforced by the database',rejected);
+console.log(JSON.stringify({p4SqlPassed:checks.length,checks,migrations:files,engine:'PostgreSQL WASM, RAM-only'},null,2));await db.close();

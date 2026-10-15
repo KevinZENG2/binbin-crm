@@ -1,0 +1,296 @@
+{
+  "phase": "P1-D backup activation",
+  "version": "0.6.0",
+  "authorizedAt": "2026-10-13T07:32:46Z",
+  "authorization": "User explicitly approved crm_backup persistent cross-tenant/account read (BYPASSRLS), job metadata writes and daily encrypted backups",
+  "recordedAt": "2026-10-13T07:54:19.073Z",
+  "role": {
+    "setupDeploymentId": "8dc03c34-7d1c-478b-b41b-1ccf764d6387",
+    "result": {
+      "role": {
+        "rolname": "crm_backup",
+        "rolsuper": false,
+        "rolbypassrls": true,
+        "rolcreatedb": false,
+        "rolcreaterole": false,
+        "rolinherit": false,
+        "schema_create": false,
+        "job_insert": true,
+        "job_update": true,
+        "job_delete": false
+      },
+      "tables": [
+        {
+          "tablename": "auth_login_limit",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "auth_password_reset",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "auth_reset_limit",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "auth_session",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_activity",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_attachment",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_contact",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_customer",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_customer_share",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_import_batch",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_lead",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_opportunity",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_opportunity_history",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "crm_task",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "flyway_schema_history",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "iam_audit",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "iam_user",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "org_department",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_audit_log",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_control_request",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_idempotency_request",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_job_run",
+          "can_read": true,
+          "can_write": true
+        },
+        {
+          "tablename": "sys_member_role",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_notification",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_object_cleanup",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_plan",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_platform_audit",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_role_policy",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_subscription_request",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_support_access_log",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_support_grant",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_tenant",
+          "can_read": true,
+          "can_write": false
+        },
+        {
+          "tablename": "sys_tenant_member",
+          "can_read": true,
+          "can_write": false
+        }
+      ],
+      "tls": true,
+      "scope": "authorized dedicated preview backup role; no business mutations"
+    },
+    "temporaryAdminCredentialsCleared": true
+  },
+  "worker": {
+    "projectId": "1807b9ed-791a-4e66-b77a-890d6b802621",
+    "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+    "serviceId": "2376373d-f291-4c8c-8e4b-686f7e4cd4b5",
+    "serviceName": "crm-db-bootstrap",
+    "publicImage": "postgres:18",
+    "backupCodeSha256": "6af44a8a682fe4b8029920c9df6befe90f1cbbff342e3b7a734e9173f6972c5a",
+    "noVolume": true,
+    "noPublicDomain": true,
+    "noPublicTcpProxy": true
+  },
+  "firstPreviewBackup": {
+    "deploymentId": "8912c098-6ec6-4866-b2a8-1cd150846049",
+    "result": {
+      "jobId": "2e70bf36-b898-4858-9f7c-87995fcc6fe3",
+      "status": "SUCCESS",
+      "encryptedBytes": 34555,
+      "encryptedSha256": "788ca0093e6182647a2409b6c0aa7d130f9d4fd9f1d168f341079a5574ecd770",
+      "s3Readback": true,
+      "authenticatedDecryption": true,
+      "tamperRejected": true,
+      "attachmentFiles": 0,
+      "restore": {
+        "target": "new disposable PostgreSQL 18 database",
+        "tableCount": 33,
+        "rowCount": 279,
+        "rlsTables": 17,
+        "migrations": 5,
+        "runtimeTenantBoundary": true,
+        "removedAfterCheck": true,
+        "attachmentFilesVerified": 0
+      },
+      "retention": "manual; no automatic deletion"
+    },
+    "encryptedObjectRetained": true,
+    "scope": "existing crm-test railway database and all READY attachment references; current attachment count is zero",
+    "rawSnapshotStoredPublicly": false
+  },
+  "schedule": {
+    "cron": "0 18 * * *",
+    "timezone": "UTC",
+    "displayTime": "02:00 Asia/Shanghai",
+    "deploymentId": "0c18f409-9db0-445f-bc38-80dbf24faa3a",
+    "confirmedState": "cronReady",
+    "runningReplicas": 0,
+    "enabled": true,
+    "nextPlannedRun": "2026-10-14T02:00:00+08:00",
+    "firstScheduledRunObserved": false,
+    "rehearsalOnEveryBackup": true
+  },
+  "protection": {
+    "businessTablesWritable": false,
+    "apiRuntimeBypassRls": false,
+    "encryption": "AES-256-GCM",
+    "keyBits": 256,
+    "keyLocation": "backup service private CRM_BACKUP_ENCRYPTION_KEY variable only",
+    "keyValueIncluded": false,
+    "backupDatabaseRole": "crm_backup",
+    "originalDatabaseRestoredOver": false,
+    "sourcePostgresServiceRestarted": false
+  },
+  "retention": {
+    "automaticDeletion": false,
+    "policy": "manual until retention period is agreed",
+    "independentKeyCustodyPending": true,
+    "offsiteReplicaConfigured": false
+  },
+  "limits": [
+    "Scheduled time has not arrived; manual first execution and settled cron configuration verified",
+    "Current preview has no attachments; previous isolated rehearsal covered one nonempty file",
+    "Restored into a disposable local database only; no production domain switch or manual restore script execution",
+    "No formal SMTP delivery or real customer pilot"
+  ],
+  "supportingDocs": [
+    "P1-D上线运维与试点手册.md",
+    "P1-D开发与云测试交付.md"
+  ],
+  "publishedCheck": {
+    "deploymentId": "1d6b0214-ac28-4310-a997-2c3501e685e0",
+    "passed": 62,
+    "backupLedgerVisible": true,
+    "resourcesMatched": true,
+    "apiDeploymentId": "23d08a99-b247-4c8a-b83a-582ecf83f5de"
+  },
+  "retentionFollowup": {
+    "at": "2026-10-13",
+    "codeSha256": "78f664571bc4e0a7e37ae55194d2c06b08a772a666853d09464bcd1f625c3a6b",
+    "deploymentId": "fbeb2c15-b8a7-4ba3-8c19-250e7b38ffb7",
+    "deploymentStatus": "SUCCESS",
+    "cronState": "cronReady",
+    "cronSchedule": "0 18 * * *",
+    "retentionDays": 30,
+    "minimumSuccessful": 3,
+    "localOperationalTests": 15,
+    "actualNewPolicyRunObserved": false,
+    "nextScheduledTime": "2026-10-14T02:00:00+08:00",
+    "keyCustodyCompleted": false,
+    "formalSmtpCompleted": false,
+    "realCustomerPilotCompleted": false,
+    "oldManualRetentionFieldsAreHistorical": true,
+    "detail": "运维增量验收.json"
+  }
+}

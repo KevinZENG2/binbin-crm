@@ -1,0 +1,40 @@
+{
+  "version": "0.5.0",
+  "phase": "P1-C",
+  "date": "2026-10-13",
+  "java": {
+    "passed": 24,
+    "failures": 0,
+    "errors": 0
+  },
+  "frontend": {
+    "typescript": true,
+    "vite": true,
+    "modules": 31,
+    "browserVisual": false,
+    "mouseEndToEnd": false
+  },
+  "native": {
+    "database": "PostgreSQL 16.15",
+    "apiPassed": 45,
+    "p1aPassed": 61,
+    "p1bPassed": 87,
+    "p1cPassed": 123,
+    "checkpointPassed": 9,
+    "fixtureCompaniesPaused": 6,
+    "releaseSha256": "2cac9d201620a082f743dd984db9fe32e18272e7c76ea76473a2fdbd7c0e4407",
+    "deploymentId": "735aff42-eee5-4809-bef1-58b5ed56f331"
+  },
+  "published": {
+    "database": "PostgreSQL 18.6",
+    "migration": "V3 → V4",
+    "readonlyPassed": 35,
+    "businessWrites": false,
+    "releaseMatchesAcceptance": true,
+    "staticAssetsMatch": true
+  },
+  "limits": {
+    "loadTest": false,
+    "productionBackupRestore": false
+  }
+}

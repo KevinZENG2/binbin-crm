@@ -1,0 +1,60 @@
+{
+  "version": "0.4.0",
+  "date": "2026-10-13",
+  "status": "passed",
+  "tests": {
+    "java": {
+      "passed": 19,
+      "failed": 0
+    },
+    "frontend": {
+      "typecheck": "passed",
+      "build": "passed",
+      "browserVisual": "not_run"
+    },
+    "isolatedNative": {
+      "engine": "PostgreSQL 16.15",
+      "p0": 45,
+      "p1a": 61,
+      "p1b": 87,
+      "checkpoint": 7,
+      "details": "docs/P1-B完整验收结果.json"
+    },
+    "publishedPreviewReadonly": {
+      "readonlyPassed": 23,
+      "checks": [
+        "published Java v0.4 ready over HTTPS",
+        "anonymous contacts rejected",
+        "anonymous leads rejected",
+        "normal login owner",
+        "select own workspace",
+        "session includes module access",
+        "GET /contacts follows current permission",
+        "/contacts is a server page",
+        "GET /leads follows current permission",
+        "/leads is a server page",
+        "GET /leads/owners follows current permission",
+        "GET /customers/options follows current permission",
+        "/customers/options is a server page",
+        "contact detail missing is hidden",
+        "contact pagination validated",
+        "lead detail missing is hidden",
+        "lead status filter validated",
+        "four policies remain available",
+        "policies expose all module switches",
+        "normal login platform-operator",
+        "operator contacts denied without grant",
+        "operator leads denied without grant",
+        "workspace header mismatch rejected"
+      ],
+      "businessWrites": false,
+      "version": "0.4.0",
+      "scope": "existing preview: normal login, self workspace selection, GET and logout only",
+      "timestamp": "2026-10-12T17:45:32.455318145Z",
+      "deploymentId": "e79ae2ca-0f13-4717-988a-4ac8f62bf5bd"
+    }
+  },
+  "originalPreviewBusinessWriteAcceptance": false,
+  "loadTesting": "not_run",
+  "nextStage": "P1-C"
+}

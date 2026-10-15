@@ -1,0 +1,90 @@
+name: Verify CRM and prepare containers
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish immutable commit images to GHCR
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: crm-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: server/pom.xml
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_RUNTIME_MODE: live
+      - run: mvn -f server/pom.xml -B -ntp verify
+      - run: sudo apt-get update && sudo apt-get install -y python3-boto3 python3-psycopg2 python3-cryptography
+      - run: python3 -m unittest discover -s server/test-support -p test_backup_operations.py
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.backup
+          push: false
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - name: Resolve lowercase registry name
+        env:
+          CRM_REPOSITORY: ${{ github.repository }}
+        run: echo "CRM_IMAGE=ghcr.io/${CRM_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        id: api
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ env.CRM_IMAGE }}:${{ github.sha }}
+      - uses: docker/build-push-action@v7
+        id: backup
+        with:
+          context: .
+          file: Dockerfile.backup
+          push: true
+          tags: ${{ env.CRM_IMAGE }}-backup:${{ github.sha }}
+      - name: Record immutable release digests
+        env:
+          CRM_API_DIGEST: ${{ steps.api.outputs.digest }}
+          CRM_BACKUP_DIGEST: ${{ steps.backup.outputs.digest }}
+        run: |
+          echo "API image: ${CRM_IMAGE}@${CRM_API_DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backup image: ${CRM_IMAGE}-backup@${CRM_BACKUP_DIGEST}" >> "$GITHUB_STEP_SUMMARY"

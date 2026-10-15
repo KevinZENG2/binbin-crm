@@ -1,0 +1,23 @@
+// Published service: normal authentication, selection, GET and logout; no business writes or database credentials.
+const base=Bun.env.CRM_API_URL!,password=Bun.env.CRM_TEST_PASSWORD!,checks:string[]=[];
+if(!base.startsWith('https://'))throw new Error('HTTPS preview required');
+function check(name:string,ok:boolean){if(!ok)throw new Error(name);checks.push(name);}
+class Reader{
+ cookie='';csrf='';tenant='';
+ async req(path:string,method='GET',body?:unknown){const r=await fetch(base+'/api/v1'+path,{method,headers:{Origin:base,...(this.cookie?{Cookie:this.cookie}:{}),'X-CSRF-Token':this.csrf,...(this.tenant?{'X-Workspace-ID':this.tenant}:{}),...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(20000)});const c=r.headers.get('Set-Cookie');if(c)this.cookie=c.split(';')[0];return{status:r.status,data:r.status===204?null:await r.json()};}
+ async login(username:string){const r=await this.req('/auth/login','POST',{username,password});check('normal login '+username,r.status===200);this.csrf=r.data.csrfToken;return r.data;}
+}
+const owner=new Reader(),op=new Reader(),anon=new Reader();
+try{
+ const h=await anon.req('/health');check('published v0.5 is healthy over HTTPS',h.status===200&&h.data.status==='UP'&&h.data.version==='0.5.0');
+ for(const path of ['/opportunities','/tasks','/activities','/sales/summary'])check('anonymous denied '+path,(await anon.req(path)).status===401);
+ const s=await owner.login('owner'),t=s.tenants.find((x:any)=>x.code==='test-1'&&x.status==='ACTIVE')??s.tenants.find((x:any)=>x.status==='ACTIVE');if(!t)throw new Error('No active own test workspace');
+ const selected=await owner.req('/auth/active-tenant','POST',{tenantId:t.id});check('select self workspace',selected.status===200);owner.tenant=t.id;const view=await owner.req('/auth/session');check('new module switches available',view.status===200&&typeof view.data.businessAccess.opportunities.read==='boolean'&&typeof view.data.businessAccess.tasks.read==='boolean'&&typeof view.data.businessAccess.activityRead==='boolean');const a=view.data.businessAccess;
+ for(const [path,allowed] of [['/sales/summary',true],['/opportunities',a.opportunities.read&&view.data.customerAccess?.read],['/opportunities/board',a.opportunities.read&&view.data.customerAccess?.read],['/opportunities/owners',a.opportunities.read&&view.data.customerAccess?.read],['/tasks',a.tasks.read],['/tasks/owners',a.tasks.read],['/activities',a.activityRead],['/contacts',a.contactRead],['/leads',a.leads.read]] as [string,boolean][]){const r=await owner.req(path);check('GET '+path+' follows current role',r.status===(allowed?200:403));if(r.status===200&&['/opportunities','/tasks','/activities','/contacts','/leads'].includes(path))check(path+' returns server page',Array.isArray(r.data.items)&&Number.isInteger(r.data.total));if(r.status===200&&path==='/opportunities/board')check('board exposes all seven stages',r.data.length===7&&r.data.every((c:any)=>Array.isArray(c.items)&&Number.isInteger(c.total)));}
+ if(a.opportunities.read){check('missing opportunity and history hidden',(await owner.req('/opportunities/'+crypto.randomUUID())).status===404&&(await owner.req('/opportunities/'+crypto.randomUUID()+'/history')).status===404);check('opportunity filters validated',(await owner.req('/opportunities?stage=UNKNOWN')).status===400);}
+ if(a.tasks.read){check('missing task hidden',(await owner.req('/tasks/'+crypto.randomUUID())).status===404);check('task status validated',(await owner.req('/tasks?status=UNKNOWN')).status===400);}
+ if(t.roles.includes('TENANT_ADMIN')){const p=await owner.req('/workspace/role-policies');check('four role policies retained',p.status===200&&p.data.length===4);check('six P1-C policy switches exposed',p.data.every((x:any)=>['opportunityCanRead','opportunityCanWrite','taskCanRead','taskCanWrite','activityCanRead','activityCanWrite'].every(k=>typeof x[k]==='boolean')));}
+ await op.login('platform-operator');for(const path of ['/opportunities','/tasks','/activities','/sales/summary'])check('operator denied without business authority '+path,(await op.req(path)).status===403);
+ const mismatch=await fetch(base+'/api/v1/tasks',{headers:{Cookie:owner.cookie,'X-Workspace-ID':crypto.randomUUID()},signal:AbortSignal.timeout(20000)});check('workspace mismatch remains protected',mismatch.status===409);
+ console.log(JSON.stringify({readonlyPassed:checks.length,checks,businessWrites:false,version:h.data.version,scope:'original preview: login, select own workspace, GET and logout only'}));
+}finally{await Promise.all([owner,op].filter(c=>c.cookie).map(c=>c.req('/auth/logout','POST').catch(()=>undefined)));}

@@ -1,0 +1,8 @@
+import { createApp } from 'vue';
+import App from './App.vue';
+import BackendWorkspace from './BackendWorkspace.vue';
+import PortalWorkspace from './PortalWorkspace.vue';
+import './styles.css';
+const query=new URLSearchParams(window.location.search),mode=query.get('mode'),portal=query.get('portal')==='1';
+const live=mode==='live'||(mode!=='demo'&&(import.meta.env.VITE_RUNTIME_MODE==='live'||window.location.hostname.endsWith('.up.railway.app')));
+createApp(portal?PortalWorkspace:live?BackendWorkspace:App).mount('#app');

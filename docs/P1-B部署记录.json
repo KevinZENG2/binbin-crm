@@ -1,0 +1,122 @@
+{
+  "version": "0.4.0",
+  "environment": "crm-test",
+  "url": "https://crm-java-api-crm-test.up.railway.app",
+  "privatePreviewUrl": "https://binbin-crm-preview.zengb-12.chatgpt.site",
+  "railway": {
+    "projectId": "1807b9ed-791a-4e66-b77a-890d6b802621",
+    "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+    "serviceId": "5de432e5-b90a-4f2e-ae7c-149619956985",
+    "deployment": {
+      "id": "53cd697f-0477-495d-8a57-5b77acfa5f8e",
+      "status": "SUCCESS",
+      "createdAt": "2026-10-12T17:40:34.619Z"
+    },
+    "releaseSha256": "0041fab438019b75e2c48c4902862d13e5fcbef6e8408ad0cba97b361971b00a",
+    "releaseContents": [
+      "server/pom.xml",
+      "server/src",
+      "dist"
+    ],
+    "backendMatchesTestedPackage": true,
+    "database": "PostgreSQL 18.6",
+    "checks": [
+      {
+        "timestamp": "2026-10-12T17:42:01.559033092Z",
+        "message": "[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0"
+      },
+      {
+        "timestamp": "2026-10-12T17:42:02.858480664Z",
+        "message": "[INFO] BUILD SUCCESS"
+      },
+      {
+        "timestamp": "2026-10-12T17:42:13.271271832Z",
+        "message": "2026-10-12T17:42:13.268Z INFO  o.flywaydb.core.FlywayExecutor : Database: jdbc:postgresql://postgres.railway.internal:5432/railway?sslmode=require (PostgreSQL 18.6)"
+      },
+      {
+        "timestamp": "2026-10-12T17:42:13.945413548Z",
+        "message": "2026-10-12T17:42:13.942Z INFO  o.f.c.i.command.DbMigrate : Migrating schema \"public\" to version \"3 - contacts leads and conversion\""
+      },
+      {
+        "timestamp": "2026-10-12T17:42:14.105971752Z",
+        "message": "2026-10-12T17:42:14.076Z INFO  o.f.c.i.command.DbMigrate : Successfully applied 1 migration to schema \"public\", now at version v3 (execution time 00:00.120s)"
+      },
+      {
+        "timestamp": "2026-10-12T17:42:16.159468303Z",
+        "message": "2026-10-12T17:42:16.155Z INFO  cn.binbin.crm.CrmApplication : Started CrmApplication in 11.977 seconds (process running for 13.199)"
+      }
+    ]
+  },
+  "staticAssetVerification": {
+    "timestamp": "2026-10-12T17:46:14.037075+00:00",
+    "health": {
+      "backend": "Java 21 / Spring Boot",
+      "database": "PostgreSQL",
+      "status": "UP",
+      "version": "0.4.0"
+    },
+    "htmlMatchesLocalBuild": true,
+    "assets": [
+      {
+        "path": "/assets/index-pVx40ax1.js",
+        "sha256": "74f7fa1fd55ffdb4aebbe91996c9eed11e8a4fe9067b6c8b8b2120650d80c0d9",
+        "bytes": 282485,
+        "matchesLocalBuild": true
+      },
+      {
+        "path": "/assets/index-Bmw7FyiP.css",
+        "sha256": "5b38bcfa002dce3574efd3f6b3cbd7c759e03708e2b5461e4ef818cbfad1b99b",
+        "bytes": 69001,
+        "matchesLocalBuild": true
+      }
+    ],
+    "browserVisual": "not_run"
+  },
+  "readonlyVerification": {
+    "readonlyPassed": 23,
+    "checks": [
+      "published Java v0.4 ready over HTTPS",
+      "anonymous contacts rejected",
+      "anonymous leads rejected",
+      "normal login owner",
+      "select own workspace",
+      "session includes module access",
+      "GET /contacts follows current permission",
+      "/contacts is a server page",
+      "GET /leads follows current permission",
+      "/leads is a server page",
+      "GET /leads/owners follows current permission",
+      "GET /customers/options follows current permission",
+      "/customers/options is a server page",
+      "contact detail missing is hidden",
+      "contact pagination validated",
+      "lead detail missing is hidden",
+      "lead status filter validated",
+      "four policies remain available",
+      "policies expose all module switches",
+      "normal login platform-operator",
+      "operator contacts denied without grant",
+      "operator leads denied without grant",
+      "workspace header mismatch rejected"
+    ],
+    "businessWrites": false,
+    "version": "0.4.0",
+    "scope": "existing preview: normal login, self workspace selection, GET and logout only",
+    "timestamp": "2026-10-12T17:45:32.455318145Z",
+    "deploymentId": "e79ae2ca-0f13-4717-988a-4ac8f62bf5bd"
+  },
+  "isolatedNative": {
+    "serviceId": "c991404a-c290-4a65-bdf5-6a9535a2c41e",
+    "database": "crm_acceptance",
+    "engine": "PostgreSQL 16.15",
+    "startupDeploymentId": "c540a0e9-83f5-4ecd-8f56-e93c4d494526",
+    "acceptanceDeploymentId": "e5596088-f533-45e7-89e2-55a3d696a97b",
+    "checkpointDeploymentId": "395a00fb-62fd-460d-b64d-547806802b47",
+    "stopDeploymentId": "a0ef4d63-eac7-4c79-872f-41aaf1df8f42",
+    "stopStatus": "SUCCESS",
+    "stopEvidence": "P1-B isolated acceptance completed. No PostgreSQL or Java process is started.",
+    "temporaryCredentialsCleared": true,
+    "publicDomain": false,
+    "volume": false
+  }
+}

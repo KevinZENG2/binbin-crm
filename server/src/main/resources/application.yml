@@ -1,0 +1,52 @@
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: none
+  error:
+    include-message: never
+    include-stacktrace: never
+spring:
+  application:
+    name: binbin-crm-server
+  datasource:
+    url: ${CRM_DB_URL:jdbc:postgresql://localhost:5432/crm}
+    username: ${CRM_DB_USER:crm_runtime}
+    password: ${CRM_DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${CRM_DB_POOL_SIZE:8}
+      minimum-idle: 1
+      connection-timeout: 10000
+  flyway:
+    enabled: ${CRM_FLYWAY_ENABLED:true}
+    url: ${CRM_MIGRATION_DB_URL:${CRM_DB_URL:jdbc:postgresql://localhost:5432/crm}}
+    user: ${CRM_MIGRATION_DB_USER:crm_migrator}
+    password: ${CRM_MIGRATION_DB_PASSWORD:}
+    clean-disabled: true
+    validate-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
+  mvc:
+    problemdetails:
+      enabled: false
+  web:
+    resources:
+      static-locations: classpath:/static/,file:/opt/crm/ui/
+crm:
+  stage: ${CRM_STAGE:development}
+  allowed-origins: ${CRM_ALLOWED_ORIGINS:http://localhost:8080,http://127.0.0.1:8080}
+  session-hours: 8
+  cookie-secure: ${CRM_COOKIE_SECURE:true}
+  seed:
+    enabled: ${CRM_SEED_ENABLED:false}
+    password: ${CRM_SEED_PASSWORD:}
+logging:
+  level:
+    root: INFO
+    org.springframework.jdbc: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level %logger{30} : %msg%n"

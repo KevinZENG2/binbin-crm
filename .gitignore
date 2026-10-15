@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.openai/workflow*.json
+.openai/*.zip
+*.log
+server/target/
+__pycache__/
+server/test-support/*.data/
+
+server/ops/assets/*.ttf

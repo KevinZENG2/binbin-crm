@@ -1,0 +1,89 @@
+{
+  "version": "0.3.0",
+  "environment": "crm-test",
+  "url": "https://crm-java-api-crm-test.up.railway.app",
+  "railway": {
+    "projectId": "1807b9ed-791a-4e66-b77a-890d6b802621",
+    "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+    "serviceId": "5de432e5-b90a-4f2e-ae7c-149619956985",
+    "deployment": {
+      "id": "13432530-db25-4e5e-afd8-f3d0d17cb379",
+      "status": "SUCCESS",
+      "createdAt": "2026-10-12T13:38:07.073Z",
+      "url": null
+    },
+    "releaseSha256": "c4d3c083059bfb6883dbf33fdb112e0884d7ab7e36a48d9a1bd613ace6a6db32",
+    "releaseContents": [
+      "server/pom.xml",
+      "server/src",
+      "dist"
+    ],
+    "javaChecks": [
+      {
+        "timestamp": "2026-10-12T13:38:37.115532620Z",
+        "message": "[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0"
+      },
+      {
+        "timestamp": "2026-10-12T13:38:40.408772609Z",
+        "message": "[INFO] BUILD SUCCESS"
+      },
+      {
+        "timestamp": "2026-10-12T13:38:49.329093759Z",
+        "message": "2026-10-12T13:38:49.327Z INFO  o.f.c.i.command.DbValidate : Successfully validated 2 migrations (execution time 00:00.019s)"
+      }
+    ]
+  },
+  "fullCloudWriteAcceptance": "passed_in_authorized_fresh_isolated_native_database",
+  "verificationFunction": "completion-only code; database/test credential references cleared; no database connection opened",
+  "initializationFix": "DevelopmentSeed includes plan_id and tenant-scoped default role policies before role grants",
+  "isolatedNative": {
+    "version": "PostgreSQL 16.15",
+    "startupDeploymentId": "46436be3-d05a-4530-bd96-547d23750c55",
+    "readonlyDeploymentId": "bca0654b-d661-47a4-b3d8-4c560f203eac",
+    "stopDeploymentId": "9908c76a-f5a5-4b87-a7c1-fd856c27acba",
+    "stopStatus": "SUCCESS",
+    "stopEvidence": "Authorized isolated acceptance finished. No PostgreSQL or Java process is started.",
+    "publicDomain": false,
+    "volume": false,
+    "acceptanceDeploymentId": "7d782f8f-c5f9-423e-98d4-188215eafe87",
+    "checkpointDeploymentId": "da994170-1e06-487f-9adc-8fec6ff8df15"
+  },
+  "temporaryServiceCredentials": "cleared after stop",
+  "fullAcceptanceResults": "docs/P1-A完整验收结果.json",
+  "uiFixes": [
+    "Visible real enterprise and platform entry links and navigation cards",
+    "Customer and administration dialogs centered in viewport with bounded internal scrolling, fixed heading/footer and background scroll lock"
+  ],
+  "staticAssetVerification": {
+    "timestamp": "2026-10-12T13:40:41.676894+00:00",
+    "health": {
+      "database": "PostgreSQL",
+      "backend": "Java 21 / Spring Boot",
+      "version": "0.3.0",
+      "status": "UP"
+    },
+    "assets": [
+      {
+        "path": "/assets/index-QzaZ1eoe.js",
+        "sha256": "7e86d4074c9b76d89039ce7b35403f42d9c7c7e575e8a15cb9e126573ab6304d",
+        "bytes": 255964,
+        "matchesLocalBuild": true
+      },
+      {
+        "path": "/assets/index-DAvgtW5a.css",
+        "sha256": "5c88150de7a2a3ce92d3fa94515b5ae8128457701e4d5de995f3b3454db3200e",
+        "bytes": 61504,
+        "matchesLocalBuild": true
+      }
+    ],
+    "htmlMatchesLocalBuild": true,
+    "browserVisual": "not_run",
+    "bugEvidence": "user screenshot reviewed",
+    "checks": [
+      "Published HTML matches final build",
+      "JavaScript and CSS match final build",
+      "Shared modal overlay and customer/admin scroll styles shipped",
+      "Public API health UP"
+    ]
+  }
+}

@@ -1,0 +1,775 @@
+{
+  "version": "0.5.0",
+  "phase": "P1-C",
+  "nativeVerificationDeployment": "735aff42-eee5-4809-bef1-58b5ed56f331",
+  "nativeDatabaseDeployment": "607a0027-64ad-45bf-a41c-f58f37d723e3",
+  "releaseSha256": "2cac9d201620a082f743dd984db9fe32e18272e7c76ea76473a2fdbd7c0e4407",
+  "results": [
+    {
+      "level": "info",
+      "apiPassed": 45,
+      "checks": [
+        "anonymous access denied",
+        "Java/PostgreSQL readiness",
+        "unknown user generic rejection",
+        "login owner",
+        "secure HttpOnly SameSite session",
+        "self tenant discovery",
+        "no active tenant denied",
+        "missing CSRF denied",
+        "authorized tenant switch",
+        "tenant A list scoped",
+        "tenant B detail hidden",
+        "customer persisted",
+        "idempotent create replay",
+        "idempotency content conflict",
+        "client tenant injection rejected",
+        "foreign tenant owner rejected",
+        "versioned customer update",
+        "stale update conflicts",
+        "owner reassignment injection rejected",
+        "page size bounded",
+        "database pagination",
+        "untrusted origin denied",
+        "tenant B switch allowed for member",
+        "tenant B list isolated",
+        "tenant A new record hidden after switch",
+        "login alice",
+        "nonmember tenant switch denied",
+        "sales sees own and shared customers",
+        "other sales detail hidden",
+        "read share cannot edit",
+        "sales cannot assign customer to others",
+        "login viewer",
+        "viewer can read",
+        "viewer cannot create",
+        "login tech-admin",
+        "technical admin has no implicit customer access",
+        "login platform-operator",
+        "operator has no implicit tenant membership",
+        "operator cannot enter tenant",
+        "expired subscription can read",
+        "expired subscription cannot write",
+        "logout revokes session",
+        "logged out session rejected",
+        "login owner",
+        "data survives a new login"
+      ],
+      "acceptanceRecordId": "cbf67f68-b3dd-4200-81a8-56b8322e56d6",
+      "timestamp": "2026-10-13T01:26:07.890549441Z"
+    },
+    {
+      "level": "info",
+      "p1aPassed": 61,
+      "checks": [
+        "fresh independent native database verified before any business writes",
+        "platform has no automatic customer access",
+        "create real plan with integer cents",
+        "plan creation idempotent",
+        "tenant initial member uses one seat",
+        "tenant creation idempotent",
+        "new account requires first password change",
+        "initial password cannot manage organization",
+        "password change invalidates old session",
+        "initial admin has management and sales roles",
+        "departments persisted with parent",
+        "department cycle denied",
+        "concurrent seat allocation permits only one remaining seat",
+        "sales cannot manage members",
+        "tenant member cannot operate platform",
+        "last active tenant admin protected",
+        "concurrent customer allocation permits only one remaining slot",
+        "replay still succeeds at customer quota",
+        "mixed viewer sales roles read all but only write owned records",
+        "role removal immediately shrinks record visibility",
+        "field masking enforced in API",
+        "hidden field write rejected",
+        "permitted core edit preserves hidden fields",
+        "hidden description remains intact in database",
+        "department record scope excludes unassigned manager records",
+        "read share grants only read",
+        "write share does not permit re-delegation or transfer",
+        "share revocation effective immediately",
+        "transfer uses version and changes owner",
+        "occupied department cannot be disabled",
+        "disabled membership immediately denies business access",
+        "re-enable member must respect seat quota",
+        "plan cannot shrink below existing usage",
+        "upgrade releases capacity for reactivation",
+        "viewer credit field hidden and writes denied",
+        "cross tenant department mutation denied",
+        "cross tenant department assignment denied",
+        "stale or forged workspace header denied",
+        "expired subscription blocks organization writes",
+        "expired tenant can request renewal with quoted integer amount",
+        "renewal request idempotent",
+        "only one pending renewal per tenant",
+        "manual renewal requires receipt reference",
+        "confirmation cannot extend subscription twice",
+        "expired renewal extends from current time and preserves counters",
+        "explicit grant opens support workspace",
+        "support reads scoped and masked customer data",
+        "support does not grant organization access",
+        "support cannot write business data",
+        "support reads leave access audit",
+        "support revocation effective immediately",
+        "support sees only explicitly authorized fields",
+        "support expiry effective without re-login",
+        "platform password reset invalidates all existing sessions",
+        "password reset forces change at next login",
+        "tenant management audit records persisted",
+        "audit does not persist test passwords",
+        "transaction counters equal actual database records",
+        "new scoped tables fail closed without context",
+        "platform suspension immediately blocks tenant access",
+        "both newly created fixture tenants paused after acceptance"
+      ],
+      "fixtureTenantIds": [
+        "21fb1ad2-7b18-4a4c-a8c9-dd283efa4eb2",
+        "1f8acb91-89c4-462a-b7ac-8a6746cc7703"
+      ],
+      "fixturePlanId": "c4cf1ad4-bfae-41b4-8509-3da092ddbe6f",
+      "scope": "isolated-new-database",
+      "timestamp": "2026-10-13T01:26:14.404767862Z"
+    },
+    {
+      "level": "info",
+      "p1bPassed": 87,
+      "checks": [
+        "isolated native target and V3 migration verified",
+        "contacts require authenticated session",
+        "leads require authenticated session",
+        "platform operator has no implicit contact access",
+        "platform operator has no implicit lead access",
+        "session exposes independent contacts and leads access",
+        "administrator-only role does not expose business modules",
+        "viewer cannot create contacts",
+        "viewer cannot create leads",
+        "contact create replay returns the same record",
+        "contact idempotency content conflict rejected",
+        "contact cannot reference another tenant customer",
+        "sales cannot reference inaccessible customer",
+        "invalid contact email rejected",
+        "client tenant injection rejected for contact",
+        "foreign contact detail hidden",
+        "new primary contact demotes previous contact and advances its version",
+        "stale contact edit rejected",
+        "contact edit requires an explicit version",
+        "contact edit persists with version increment",
+        "customer selector returns only accessible writable customers",
+        "contact pagination validates bounds",
+        "contact search and customer filter are server scoped",
+        "foreign customer contact filter denied",
+        "read-only customer share exposes contacts read-only",
+        "read-only shared contact cannot be edited",
+        "write customer share allows eligible contact edit",
+        "share revocation immediately hides related contacts",
+        "customer transfer updates inherited contact access",
+        "viewer can read contacts but not write",
+        "contact module revocation takes effect without relogin",
+        "contact module disable does not disable leads",
+        "lead module revocation is independent",
+        "viewer module writing rejected",
+        "new lead starts NEW",
+        "lead create is idempotent",
+        "sales lead scope hides other owners",
+        "cross-tenant lead detail hidden",
+        "foreign lead owner rejected",
+        "lead creation cannot inject CONVERTED status",
+        "lead pagination/status validated",
+        "qualification cannot be skipped",
+        "unqualified lead cannot convert",
+        "stale lead version rejected",
+        "lead update requires explicit version",
+        "contact then qualification advances versions",
+        "new-customer conversion obeys customer quota",
+        "quota failure leaves no customer/contact or lead change",
+        "failed conversion rolls back its idempotency entry",
+        "conversion cannot reference foreign customer",
+        "conversion target modes cannot be mixed",
+        "existing-customer conversion works at full customer quota",
+        "conversion replay returns stable customer/contact ids without extra records",
+        "conversion idempotency content changes rejected",
+        "converted lead cannot convert with a second key",
+        "converted lead remains read-only",
+        "conversion copies lead contact details",
+        "converted contact cannot move to another customer",
+        "foreign lead conversion hidden",
+        "new-customer conversion creates linked customer and contact atomically",
+        "converted customer retains chosen level and owner",
+        "conversion does not bypass protected customer description field",
+        "contact insertion failure rolls back new customer, counters and lead",
+        "same failed request key can succeed after rollback",
+        "same-key concurrent conversion returns one customer and contact",
+        "different-key concurrent conversion has one success and one conflict",
+        "ordinary create and conversion serialize the final customer quota",
+        "losing conversion keeps qualified lead or successful conversion is fully linked",
+        "department lead scope excludes another department",
+        "combined roles broaden reading without broadening lead writing",
+        "role withdrawal immediately hides out-of-scope lead",
+        "conversion result masks inaccessible customer and contact references",
+        "customer support grant cannot read contacts or leads",
+        "runtime role is neither superuser nor RLS bypass",
+        "all nine scoped tables force RLS with separate ownership",
+        "contacts and leads fail closed without tenant context",
+        "composite FK rejects cross-tenant contact association",
+        "runtime RLS rejects foreign-tenant contact writes",
+        "Java runtime database connections use TLS",
+        "conversion quota counter equals actual customer count",
+        "every converted lead has complete linked conversion result",
+        "expired tenant can read contacts and leads",
+        "expired tenant cannot write contacts or leads",
+        "expired tenant cannot convert",
+        "contact and lead changes have metadata audit records",
+        "each customer has at most one primary contact",
+        "both P1-B fixture companies suspended after acceptance"
+      ],
+      "fixtureTenantIds": [
+        "1e7b436d-71ea-45b3-b5ab-bbeb12b96e07",
+        "a463e936-c4d0-491d-a487-4f210f86f873"
+      ],
+      "fixturePlanId": "6a86cee9-0664-47b9-99dc-66671b381f6b",
+      "scope": "isolated-new-database",
+      "businessAudit": [
+        {
+          "action": "CONTACT_CREATED",
+          "count": 7
+        },
+        {
+          "action": "CONTACT_UPDATED",
+          "count": 2
+        },
+        {
+          "action": "LEAD_CONVERTED",
+          "count": 5
+        },
+        {
+          "action": "LEAD_CREATED",
+          "count": 7
+        },
+        {
+          "action": "LEAD_UPDATED",
+          "count": 12
+        }
+      ],
+      "connections": {
+        "total": 3,
+        "encrypted": 3
+      },
+      "counters": {
+        "customer_count": 7,
+        "customers": 7,
+        "contacts": 7
+      },
+      "timestamp": "2026-10-13T01:26:24.141038390Z"
+    },
+    {
+      "phase": "P1-C",
+      "passed": 123,
+      "checks": [
+        "isolated native target has V4 migration",
+        "anonymous denied /opportunities",
+        "anonymous denied /opportunities/board",
+        "anonymous denied /tasks",
+        "anonymous denied /activities",
+        "anonymous denied /sales/summary",
+        "platform has no implicit business access /opportunities",
+        "platform has no implicit business access /tasks",
+        "platform has no implicit business access /activities",
+        "platform has no implicit business access /sales/summary",
+        "session exposes P1-C module switches",
+        "enterprise administration alone grants no access /opportunities",
+        "enterprise administration alone grants no access /tasks",
+        "enterprise administration alone grants no access /activities",
+        "opportunity starts CONTACT with expected and actual amounts separated",
+        "opportunity create is idempotent",
+        "opportunity idempotency rejects changed body",
+        "opportunity has initial immutable history",
+        "foreign opportunity customer hidden",
+        "inaccessible opportunity customer hidden",
+        "foreign opportunity owner invalid",
+        "owner without linked customer access is rejected",
+        "fractional cents rejected",
+        "negative amount rejected",
+        "tenant injection rejected",
+        "opportunity stage injection rejected",
+        "missing idempotency key rejected",
+        "csrf protects P1-C writes",
+        "workspace mismatch blocks P1-C access",
+        "opportunity date outside range rejected",
+        "viewer cannot create opportunity",
+        "viewer reads opportunity without write",
+        "sales own scope hides other opportunity",
+        "foreign opportunity and history hidden",
+        "opportunity query bounds validated",
+        "opportunity edit persists cents and version",
+        "stale opportunity edit rejected",
+        "opportunity edit needs version",
+        "stage skip rejected",
+        "stage reason required",
+        "open stage next action required",
+        "stage moves and saves history in one transaction",
+        "stage same-key replay has no additional history",
+        "stage replay rejects a different target",
+        "stale stage change rejected",
+        "two different stage requests have one winner and one version conflict",
+        "concurrent stage requests create one history row",
+        "won requires actual amount",
+        "won preserves estimate and separate actual amount",
+        "won same-key retry is safe",
+        "closed opportunity cannot be edited or reopened",
+        "lost records reason and no actual amount",
+        "board includes seven stages with permission-filtered totals",
+        "board and list filters agree",
+        "manager sees all visible opportunity totals",
+        "independent task is supported",
+        "linked task creation replays safely",
+        "task cannot mix customer and opportunity",
+        "task requires customer with opportunity",
+        "foreign task links hidden",
+        "foreign task assignee rejected",
+        "task assigned to inaccessible recipient rejected",
+        "viewer cannot create task",
+        "task deadline same Shanghai day is not overdue",
+        "task editing and overdue calculation persist",
+        "stale task update rejected",
+        "overdue and own task filters are scoped",
+        "task completion records time and increments version",
+        "task completion replay is stable",
+        "completed task cannot be edited directly",
+        "reopen requires current version",
+        "task can reopen with completion time cleared",
+        "concurrent task completion has one winner",
+        "sales cannot read another assignee independent task",
+        "foreign task detail hidden",
+        "activity links customer and closed opportunity",
+        "activity creation is idempotent",
+        "activity content conflict rejected",
+        "activity blank content rejected",
+        "future activity time rejected",
+        "activity type validated",
+        "cross-tenant activity customer hidden",
+        "viewer cannot add followup",
+        "activity and task opportunity filters retain links",
+        "foreign activity detail hidden",
+        "workbench summary uses actor scope",
+        "opportunity revocation immediately denies module and hides linked tasks/followups",
+        "independent task survives opportunity revocation",
+        "task switch is independent",
+        "activity switch is independent",
+        "viewer P1-C writes rejected by policy validation",
+        "customer share does not grant all opportunity records",
+        "read-only customer share makes owned opportunity readonly",
+        "read-only shared opportunity stage write rejected",
+        "customer write share enables own opportunity writes",
+        "customer share revocation hides opportunity history and linked content",
+        "unconverted source lead rejected",
+        "opportunity preserves converted lead source",
+        "source lead cannot link another customer",
+        "source lead id and name are masked after lead access revocation",
+        "same department opportunity is visible",
+        "department scope removal immediately hides others",
+        "combined viewer scope broadens read without broadening write",
+        "history insert failure aborts stage transaction",
+        "history failure rolls back audit and idempotency entries",
+        "failed stage request can retry with same key",
+        "all thirteen scoped tables force RLS with separate owner",
+        "P1-C tables fail closed without tenant context",
+        "runtime cannot update immutable opportunity history",
+        "runtime cannot update original activities",
+        "RLS rejects wrong-tenant task inserts",
+        "composite FK rejects mismatched activity customer/opportunity",
+        "composite FK rejects mismatched converted source lead",
+        "all Java JDBC connections use TLS",
+        "customer-only support grant excludes /opportunities",
+        "customer-only support grant excludes /tasks",
+        "customer-only support grant excludes /activities",
+        "customer-only support grant excludes /sales/summary",
+        "expired subscription retains controlled read",
+        "expired subscription denies all P1-C writes",
+        "expired record responses remove write actions",
+        "suspended company denies P1-C business reads",
+        "audit records all new business actions"
+      ],
+      "fixtureTenantIds": [
+        "ba674af0-22c3-4ef2-a5d1-7fbc07f23de4",
+        "316f4baf-cc41-4f5a-abeb-00029398fa7f"
+      ],
+      "fixturePlanId": "14b2f781-0aa3-4642-b933-14922f61086a",
+      "fixturesPaused": true,
+      "connections": {
+        "total": 4,
+        "encrypted": 4
+      },
+      "audit": [
+        {
+          "action": "ACTIVITY_CREATED",
+          "entity_type": "ACTIVITY",
+          "count": 2
+        },
+        {
+          "action": "CONTACT_CREATED",
+          "entity_type": "CONTACT",
+          "count": 1
+        },
+        {
+          "action": "CUSTOMER_CREATED",
+          "entity_type": "CUSTOMER",
+          "count": 4
+        },
+        {
+          "action": "CUSTOMER_SHARED",
+          "entity_type": "CUSTOMER",
+          "count": 2
+        },
+        {
+          "action": "CUSTOMER_SHARE_REVOKED",
+          "entity_type": "CUSTOMER",
+          "count": 1
+        },
+        {
+          "action": "LEAD_CONVERTED",
+          "entity_type": "LEAD",
+          "count": 1
+        },
+        {
+          "action": "LEAD_CREATED",
+          "entity_type": "LEAD",
+          "count": 1
+        },
+        {
+          "action": "LEAD_UPDATED",
+          "entity_type": "LEAD",
+          "count": 2
+        },
+        {
+          "action": "OPPORTUNITY_CREATED",
+          "entity_type": "OPPORTUNITY",
+          "count": 7
+        },
+        {
+          "action": "OPPORTUNITY_STAGE_CHANGED",
+          "entity_type": "OPPORTUNITY",
+          "count": 7
+        },
+        {
+          "action": "OPPORTUNITY_UPDATED",
+          "entity_type": "OPPORTUNITY",
+          "count": 1
+        },
+        {
+          "action": "TASK_COMPLETED",
+          "entity_type": "TASK",
+          "count": 2
+        },
+        {
+          "action": "TASK_CREATED",
+          "entity_type": "TASK",
+          "count": 3
+        },
+        {
+          "action": "TASK_REOPENED",
+          "entity_type": "TASK",
+          "count": 1
+        },
+        {
+          "action": "TASK_UPDATED",
+          "entity_type": "TASK",
+          "count": 1
+        }
+      ],
+      "concurrency": "two requests only; not a load test",
+      "timestamp": "2026-10-13T01:26:44.195413976Z"
+    }
+  ],
+  "checkpoint": {
+    "level": "info",
+    "checkpointPassed": 9,
+    "assertions": [
+      "checkpoint is isolated native PostgreSQL",
+      "runtime is neither superuser nor RLS bypass",
+      "thirteen scoped tables force RLS under separate owner",
+      "all newly created fixture companies are suspended",
+      "fixture quota counters match actual records",
+      "all Java JDBC connections use TLS",
+      "acceptance fault triggers are removed",
+      "original followups and stage history have no runtime update privilege",
+      "four migrations succeeded"
+    ],
+    "engine": {
+      "name": "crm_acceptance",
+      "version": "PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit"
+    },
+    "role": {
+      "rolname": "crm_runtime",
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "rls": [
+      {
+        "relname": "crm_activity",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_contact",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_customer",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_customer_share",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_lead",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_opportunity",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_opportunity_history",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "crm_task",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "org_department",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_audit_log",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_idempotency_request",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_role_policy",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      },
+      {
+        "relname": "sys_support_access_log",
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "owner": "crm_migrator"
+      }
+    ],
+    "tenants": [
+      {
+        "id": "21fb1ad2-7b18-4a4c-a8c9-dd283efa4eb2",
+        "code": "p1a-a-f25a1c86",
+        "status": "SUSPENDED",
+        "active_member_count": 3,
+        "customer_count": 2,
+        "actual_members": 3,
+        "actual_customers": 2
+      },
+      {
+        "id": "1f8acb91-89c4-462a-b7ac-8a6746cc7703",
+        "code": "p1a-b-f25a1c86",
+        "status": "SUSPENDED",
+        "active_member_count": 1,
+        "customer_count": 0,
+        "actual_members": 1,
+        "actual_customers": 0
+      },
+      {
+        "id": "1e7b436d-71ea-45b3-b5ab-bbeb12b96e07",
+        "code": "p1b-a-fe2d51e2",
+        "status": "SUSPENDED",
+        "active_member_count": 5,
+        "customer_count": 7,
+        "actual_members": 5,
+        "actual_customers": 7
+      },
+      {
+        "id": "a463e936-c4d0-491d-a487-4f210f86f873",
+        "code": "p1b-b-fe2d51e2",
+        "status": "SUSPENDED",
+        "active_member_count": 1,
+        "customer_count": 1,
+        "actual_members": 1,
+        "actual_customers": 1
+      },
+      {
+        "id": "ba674af0-22c3-4ef2-a5d1-7fbc07f23de4",
+        "code": "p1c-a-33c8560c",
+        "status": "SUSPENDED",
+        "active_member_count": 6,
+        "customer_count": 3,
+        "actual_members": 6,
+        "actual_customers": 3
+      },
+      {
+        "id": "316f4baf-cc41-4f5a-abeb-00029398fa7f",
+        "code": "p1c-b-33c8560c",
+        "status": "SUSPENDED",
+        "active_member_count": 1,
+        "customer_count": 1,
+        "actual_members": 1,
+        "actual_customers": 1
+      }
+    ],
+    "connections": {
+      "total": 4,
+      "encrypted": 4
+    },
+    "migrations": [
+      {
+        "version": "1",
+        "description": "identity tenants and customer core",
+        "success": true
+      },
+      {
+        "version": "2",
+        "description": "saas organization policy and subscription",
+        "success": true
+      },
+      {
+        "version": "3",
+        "description": "contacts leads and conversion",
+        "success": true
+      },
+      {
+        "version": "4",
+        "description": "opportunities activities and tasks",
+        "success": true
+      }
+    ],
+    "grants": {
+      "history_update": false,
+      "activity_update": false
+    },
+    "audit": [
+      {
+        "action": "ACTIVITY_CREATED",
+        "entity_type": "ACTIVITY",
+        "count": 2
+      },
+      {
+        "action": "CONTACT_CREATED",
+        "entity_type": "CONTACT",
+        "count": 1
+      },
+      {
+        "action": "CUSTOMER_CREATED",
+        "entity_type": "CUSTOMER",
+        "count": 4
+      },
+      {
+        "action": "CUSTOMER_SHARED",
+        "entity_type": "CUSTOMER",
+        "count": 2
+      },
+      {
+        "action": "CUSTOMER_SHARE_REVOKED",
+        "entity_type": "CUSTOMER",
+        "count": 1
+      },
+      {
+        "action": "LEAD_CONVERTED",
+        "entity_type": "LEAD",
+        "count": 1
+      },
+      {
+        "action": "LEAD_CREATED",
+        "entity_type": "LEAD",
+        "count": 1
+      },
+      {
+        "action": "LEAD_UPDATED",
+        "entity_type": "LEAD",
+        "count": 2
+      },
+      {
+        "action": "OPPORTUNITY_CREATED",
+        "entity_type": "OPPORTUNITY",
+        "count": 7
+      },
+      {
+        "action": "OPPORTUNITY_STAGE_CHANGED",
+        "entity_type": "OPPORTUNITY",
+        "count": 7
+      },
+      {
+        "action": "OPPORTUNITY_UPDATED",
+        "entity_type": "OPPORTUNITY",
+        "count": 1
+      },
+      {
+        "action": "TASK_COMPLETED",
+        "entity_type": "TASK",
+        "count": 2
+      },
+      {
+        "action": "TASK_CREATED",
+        "entity_type": "TASK",
+        "count": 3
+      },
+      {
+        "action": "TASK_REOPENED",
+        "entity_type": "TASK",
+        "count": 1
+      },
+      {
+        "action": "TASK_UPDATED",
+        "entity_type": "TASK",
+        "count": 1
+      }
+    ],
+    "timestamp": "2026-10-13T01:26:42.537864042Z"
+  },
+  "isolationProof": {
+    "level": "info",
+    "isolationProof": true,
+    "apiProtocol": "http:",
+    "apiHostname": "crm-p1a-isolated-postgres.railway.internal",
+    "apiPort": "8080",
+    "databaseHostname": "crm-p1a-isolated-postgres.railway.internal",
+    "databasePath": "/crm_acceptance",
+    "healthStatus": 200,
+    "businessWrites": false,
+    "database_name": "crm_acceptance",
+    "engine": "PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit",
+    "initial_tenants": 3,
+    "initial_users": 6,
+    "fixture_tenants": 0
+  },
+  "verificationLimits": {
+    "browserVisual": false,
+    "mouseEndToEnd": false,
+    "loadTest": false,
+    "productionBackupRestore": false
+  }
+}

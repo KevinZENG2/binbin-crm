@@ -1,0 +1,13 @@
+// Normal owner API only. Private bodies remain in memory; no hashes or bodies
+// are logged or written. Waits for the authorized v0.10 rollout, then compares.
+const base='https://crm-java-api-crm-test.up.railway.app';
+if(Bun.env.CRM_API_URL!==base)throw Error('Known HTTPS preview required');
+let cookie='',csrf='',tenant='';
+async function request(path:string,method='GET',body?:unknown){const r=await fetch(base+'/api/v1'+path,{method,headers:{Origin:base,'X-CSRF-Token':csrf,...(cookie?{Cookie:cookie}:{}),...(tenant?{'X-Workspace-ID':tenant}:{}),...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const c=r.headers.get('set-cookie');if(c)cookie=c.split(';')[0];if(!r.ok)throw Error('UPGRADE_READ_STATUS_'+r.status);return r.status===204?null:r.json();}
+async function login(){const s=await request('/auth/login','POST',{username:'owner',password:Bun.env.CRM_TEST_PASSWORD});csrf=s.csrfToken;const t=s.tenants.find((v:any)=>v.code==='test-1'&&v.status==='ACTIVE');if(!t)throw Error('Own active preview workspace required');await request('/auth/active-tenant','POST',{tenantId:t.id});tenant=t.id;}
+async function records(){const result:any={};for(const module of ['customers','contacts','leads','opportunities','tasks','activities','products','quotes']){const data=await request('/'+module+'?pageSize=100');if(data.total>100)throw Error('Upgrade check page limit');const items=data.items.map((x:any)=>{const v={...x};delete v.contractLinked;return v;}).sort((a:any,b:any)=>a.id.localeCompare(b.id));result[module]=JSON.stringify(items);}return result;}
+try{
+ await login();let before=await records();const initial=await request('/health');if(initial.version!=='0.8.0')throw Error('Expected original v0.8 before upgrade');console.log('CRM_UPGRADE_CHECK_READY '+JSON.stringify({normalOwner:true,privateDataLogged:false,originalVersion:initial.version}));
+ const deadline=Date.now()+300000;let upgraded=false;while(Date.now()<deadline){await new Promise(r=>setTimeout(r,5000));try{const h=await request('/health');if(h.status==='UP'&&h.version==='0.10.0'){upgraded=true;break;}}catch{}}
+ if(!upgraded)throw Error('Upgrade readiness timeout');const after=await records();if(Object.keys(before).some(k=>before[k]!==after[k]))throw Error('Original visible records changed');before={};console.log('CRM_P2CD_UPGRADE_RESULT '+JSON.stringify({version:'0.10.0',originalVisibleRecordsUnchanged:true,modules:8,businessWrites:false,privateDataLogged:false}));
+}finally{if(cookie)await request('/auth/logout','POST').catch(()=>undefined);}

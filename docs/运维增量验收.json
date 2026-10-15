@@ -1,0 +1,183 @@
+{
+  "at": "2026-10-13",
+  "timezone": "Asia/Shanghai",
+  "scope": "P1-D operational follow-up; P2 implementation not started",
+  "backup": {
+    "deploymentId": "fbeb2c15-b8a7-4ba3-8c19-250e7b38ffb7",
+    "deploymentStatus": "SUCCESS",
+    "state": "cronReady",
+    "codeSha256": "78f664571bc4e0a7e37ae55194d2c06b08a772a666853d09464bcd1f625c3a6b",
+    "cronSchedule": "0 18 * * *",
+    "localTime": "02:00 Asia/Shanghai",
+    "retentionDays": 30,
+    "minimumSuccessful": 3,
+    "cleanupRequiresNewVerifiedRestore": true,
+    "cleanupTarget": "audited expired backups/preview snapshots only",
+    "auditRecordsRetained": true,
+    "actualNewPolicyExecutionObserved": false,
+    "nextPlannedRun": "2026-10-14T02:00:00+08:00",
+    "earlierRetainedBackup": {
+      "jobId": "2e70bf36-b898-4858-9f7c-87995fcc6fe3",
+      "sha256": "788ca0093e6182647a2409b6c0aa7d130f9d4fd9f1d168f341079a5574ecd770",
+      "bytes": 34555,
+      "availabilityExposedWithoutPrivateAddress": true
+    },
+    "scheduleRemoval": {
+      "attempted": true,
+      "applied": false,
+      "autoReviewRejected": true,
+      "reason": "May disrupt the daily backup schedule; the user authorized retention changes, not disabling the scheduled job",
+      "resolution": "Original daily schedule preserved; no indirect disabling workaround used"
+    }
+  },
+  "api": {
+    "deploymentId": "fde9f650-483f-4f27-a646-171ecdfb5416",
+    "deploymentStatus": "SUCCESS",
+    "releaseSha256": "a3abc64369eeb46691811db205725f62f6dfe8ea5af9f2392e3652e9df33a9e0",
+    "assetSha256": {
+      "index.html": "268dc41517106d424e3f63588f47419f5cbd9db9d251e2ce12d549ba089b431b",
+      "assets/index-Bx1bKHax.css": "daf01bf64a1d88c10c5d74cc6c614f4960163411c3959b94abd6ecbd22b3ef0d",
+      "assets/index-CIjYhMZ7.js": "2619d1662a5ae1b46c98c5a81792de1e327a20836389a90708cb015f1bfb2adf"
+    },
+    "javaVerify": {
+      "passed": 32,
+      "failed": 0,
+      "executedOnNewCloudRelease": true
+    },
+    "operationsChanges": [
+      "Chinese task labels",
+      "private file availability boolean",
+      "latest backup/retention results remain visible among reminder tasks",
+      "SMTP TLS hostname verification"
+    ]
+  },
+  "tests": {
+    "localOperational": {
+      "passed": 15,
+      "usesSyntheticStore": true,
+      "usesSyntheticDatabaseAdapter": true,
+      "actualBucketDeletions": false
+    },
+    "frontendTypescriptBuild": true,
+    "publishedReadonly": {
+      "deploymentId": "b13285d7-8c3d-4b62-ac67-0adb81b58ebc",
+      "readonlyPassed": 63,
+      "checks": [
+        "v0.6 is healthy over HTTPS",
+        "anonymous denied /reports/sales?from=2026-10-13&to=2026-10-13",
+        "anonymous denied /exports/customers",
+        "anonymous denied /imports/customers",
+        "anonymous denied /attachments",
+        "anonymous denied /notifications",
+        "anonymous denied /platform/operations",
+        "anonymous denied /opportunities",
+        "anonymous denied /tasks",
+        "anonymous denied /activities",
+        "anonymous denied /sales/summary",
+        "normal unchanged-password login owner",
+        "self workspace selection succeeds",
+        "five independent delivery permissions available",
+        "GET /reports/sales?from=2026-10-13&to=2026-10-13 obeys current permissions",
+        "real reports return scoped dated aggregates",
+        "GET /imports/customers obeys current permissions",
+        "GET /attachments obeys current permissions",
+        "files return private metadata page",
+        "GET /notifications obeys current permissions",
+        "notifications contain only current visible personal entries",
+        "previous module GET /opportunities obeys current permission",
+        "previous module GET /tasks obeys current permission",
+        "previous module GET /activities obeys current permission",
+        "previous module GET /contacts obeys current permission",
+        "previous module GET /leads obeys current permission",
+        "controlled export customers",
+        "UTF-8 CSV and forced download customers",
+        "controlled export contacts",
+        "UTF-8 CSV and forced download contacts",
+        "controlled export leads",
+        "UTF-8 CSV and forced download leads",
+        "controlled export opportunities",
+        "UTF-8 CSV and forced download opportunities",
+        "controlled export tasks",
+        "UTF-8 CSV and forced download tasks",
+        "controlled export activities",
+        "UTF-8 CSV and forced download activities",
+        "customer template is available without importing",
+        "missing attachment has no disclosure",
+        "actual storage quota and usage available",
+        "five new switches exist for all four roles",
+        "enterprise owner has no platform operations privilege",
+        "normal unchanged-password login platform-operator",
+        "operator lacks implicit business access /reports/sales?from=2026-10-13&to=2026-10-13",
+        "operator lacks implicit business access /exports/customers",
+        "operator lacks implicit business access /imports/customers",
+        "operator lacks implicit business access /attachments",
+        "operator lacks implicit business access /notifications",
+        "operator lacks implicit business access /opportunities",
+        "operator lacks implicit business access /tasks",
+        "operator lacks implicit business access /activities",
+        "real DB and S3 are healthy",
+        "automatic reminders are enabled",
+        "operational metadata contains no private object addresses",
+        "authorized encrypted backup result is visible in platform operations",
+        "backup file availability is visible without its private address",
+        "live SMTP remains disabled until sender configured",
+        "recovery page sends no-referrer policy",
+        "three release resources specified",
+        "published resource matches build index.html",
+        "published resource matches build assets/index-Bx1bKHax.css",
+        "published resource matches build assets/index-CIjYhMZ7.js"
+      ],
+      "version": "0.6.0",
+      "businessWrites": false,
+      "scope": "known existing preview: login, own selection, GET, logout; no import/upload/email request"
+    },
+    "fullBusinessWriteSuiteRerun": false
+  },
+  "custody": {
+    "toolPrepared": true,
+    "randomKeyRoundtripTest": true,
+    "realBackupKeyExported": false,
+    "independentCustodyCompleted": false,
+    "required": "Owner RSA public key or independent vault location; never send private key/password"
+  },
+  "mail": {
+    "proposedProvider": "Resend SMTP",
+    "settingsPrepared": true,
+    "tlsAuthPreflightPrepared": true,
+    "credentialsProvided": false,
+    "verifiedSenderProvided": false,
+    "actualProviderAuthChecked": false,
+    "actualMessageSent": false,
+    "recoveryEnabled": false
+  },
+  "pilot": {
+    "runbookPrepared": true,
+    "actualCustomerCreated": false,
+    "actualCustomerAcceptance": false,
+    "required": [
+      "Company name",
+      "Administrator login/name",
+      "Trial days",
+      "Anonymized samples",
+      "Customer acceptance"
+    ]
+  },
+  "p2": {
+    "phasePlanPrepared": true,
+    "implementationStarted": false,
+    "stages": [
+      "P2-A products and quotes",
+      "P2-B approvals",
+      "P2-C contracts",
+      "P2-D receipts"
+    ],
+    "backupRlsVersionGuardUpgradeRequiredBeforeNewMigration": true
+  },
+  "limitations": [
+    "No browser visual/mouse end-to-end verification",
+    "No actual new-policy retention cron execution observed",
+    "No cross-account/offsite snapshot replica",
+    "No real independent-key custody handoff",
+    "No formal SMTP or real customer pilot"
+  ]
+}

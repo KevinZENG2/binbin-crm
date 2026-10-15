@@ -1,0 +1,158 @@
+{
+  "version": "0.3.0",
+  "date": "2026-10-12",
+  "status": "implemented_deployed_authorized_isolated_native_acceptance_passed",
+  "tests": {
+    "java": {
+      "passed": 14,
+      "failed": 0
+    },
+    "frontendDomain": {
+      "passed": 19,
+      "failed": 0,
+      "scope": "browser demo domain"
+    },
+    "frontendBuild": {
+      "status": "passed",
+      "checks": [
+        "Vue TypeScript",
+        "Vite build",
+        "customer and admin dialog overlay, Teleport and bounded scrolling source review"
+      ],
+      "browserVisual": "not_run",
+      "bugEvidence": "User-provided screenshot showed customer dialog in document flow at bottom-left; shared overlay style was missing. Fixed live customer and administration dialogs; no browser interaction test performed."
+    },
+    "nativeCloudReadonly": {
+      "deploymentId": "be3fd6a7-68ec-4180-93b1-4d2bc95f59cc",
+      "status": "SUCCESS",
+      "timestamp": "2026-10-12T10:23:08.025642534Z",
+      "level": "info",
+      "readonlyPassed": 33,
+      "checks": [
+        "normal login owner",
+        "self workspace selection",
+        "GET /workspace/summary",
+        "GET /workspace/members",
+        "member responses contain no credentials",
+        "GET /workspace/departments",
+        "GET /workspace/role-policies",
+        "four policies returned",
+        "GET /workspace/renewals",
+        "GET /workspace/support/operators",
+        "GET /workspace/support/grants",
+        "GET /workspace/audits",
+        "GET /customers",
+        "GET /customers/owners",
+        "normal login alice",
+        "self workspace selection",
+        "sales denied /workspace/members",
+        "sales denied /workspace/role-policies",
+        "sales denied /platform/tenants",
+        "sales denied /workspace/support/grants",
+        "normal login platform-operator",
+        "GET /platform/tenants",
+        "GET /platform/plans",
+        "GET /platform/renewals",
+        "GET /platform/accounts",
+        "account responses contain no credential digests",
+        "GET /platform/support/grants",
+        "GET /platform/audits",
+        "operator has no business access without grant",
+        "V2 migration applied",
+        "seven scoped tables force RLS",
+        "stored quotas match actual native database counts",
+        "new scoped tables fail closed without context"
+      ],
+      "businessWrites": false
+    },
+    "isolatedSql": {
+      "passed": 8,
+      "failed": 0,
+      "engine": "PostgreSQL WASM, RAM-only",
+      "cloudDatabaseWrites": false,
+      "nativeConcurrencyClaim": false,
+      "checks": [
+        "V1/V2 migrations",
+        "member counter",
+        "disabled membership counter",
+        "customer counter",
+        "missing context customer RLS",
+        "missing context policy RLS",
+        "rollback counter atomicity",
+        "cross-tenant RLS write rejection"
+      ]
+    },
+    "nativeCloudFullWrites": {
+      "status": "passed",
+      "scope": "new isolated native crm_acceptance database only",
+      "databaseVersion": "PostgreSQL 16.15",
+      "p0ApiPassed": 45,
+      "p1aPassed": 61,
+      "checkpointPassed": 5,
+      "deploymentId": "7d782f8f-c5f9-423e-98d4-188215eafe87",
+      "authorizedBy": "User message 授权 at 2026-10-12T20:57:44+08:00",
+      "resultsFile": "docs/P1-A完整验收结果.json",
+      "originalPreviewDatabaseFullWrites": false
+    },
+    "isolatedNative": {
+      "version": "PostgreSQL 16.15",
+      "database": "crm_acceptance",
+      "initialization": "V1/V2 and new V2-compatible development seed passed",
+      "readonly": {
+        "level": "info",
+        "readonlyPassed": 33,
+        "checks": [
+          "normal login owner",
+          "self workspace selection",
+          "GET /workspace/summary",
+          "GET /workspace/members",
+          "member responses contain no credentials",
+          "GET /workspace/departments",
+          "GET /workspace/role-policies",
+          "four policies returned",
+          "GET /workspace/renewals",
+          "GET /workspace/support/operators",
+          "GET /workspace/support/grants",
+          "GET /workspace/audits",
+          "GET /customers",
+          "GET /customers/owners",
+          "normal login alice",
+          "self workspace selection",
+          "sales denied /workspace/members",
+          "sales denied /workspace/role-policies",
+          "sales denied /platform/tenants",
+          "sales denied /workspace/support/grants",
+          "normal login platform-operator",
+          "GET /platform/tenants",
+          "GET /platform/plans",
+          "GET /platform/renewals",
+          "GET /platform/accounts",
+          "account responses contain no credential digests",
+          "GET /platform/support/grants",
+          "GET /platform/audits",
+          "operator has no business access without grant",
+          "V2 migration applied",
+          "seven scoped tables force RLS",
+          "stored quotas match actual native database counts",
+          "new scoped tables fail closed without context"
+        ],
+        "businessWrites": false,
+        "deploymentId": "bca0654b-d661-47a4-b3d8-4c560f203eac",
+        "timestamp": "2026-10-12T11:29:42.845625895Z"
+      },
+      "fullWrites": "passed",
+      "concurrency": "passed: two requests compete for the last member/customer slot",
+      "temporaryServiceId": "c991404a-c290-4a65-bdf5-6a9535a2c41e",
+      "serviceStopped": true,
+      "volumeAttached": false,
+      "startupDeploymentId": "46436be3-d05a-4530-bd96-547d23750c55",
+      "stopDeploymentId": "9908c76a-f5a5-4b87-a7c1-fd856c27acba",
+      "temporaryCredentialsCleared": true
+    }
+  },
+  "p0HistoricalTestsNotCounted": {
+    "version": "0.2",
+    "httpsApi": 45,
+    "database": 19
+  }
+}
