@@ -34,8 +34,9 @@ public class BusinessService {
     private final TransactionTemplate tx;
     private final AuthService auth;
     private final CustomerService customers;
+    private final SalesFoundationService foundation;
     private final ObjectMapper json;
-    public BusinessService(NamedParameterJdbcTemplate db,TransactionTemplate tx,AuthService auth,CustomerService customers,ObjectMapper json){this.db=db;this.tx=tx;this.auth=auth;this.customers=customers;this.json=json;}
+    public BusinessService(NamedParameterJdbcTemplate db,TransactionTemplate tx,AuthService auth,CustomerService customers,SalesFoundationService foundation,ObjectMapper json){this.db=db;this.tx=tx;this.auth=auth;this.customers=customers;this.foundation=foundation;this.json=json;}
     private static String text(String value){return value==null?"":value.strip();}
     private <T> T scoped(AuthService.Session s,boolean contacts,boolean write,Function<AuthService.Actor,T> fn){
         return tx.execute(status->{
@@ -113,7 +114,7 @@ public class BusinessService {
     private void owner(Map<String,Object> p){int count=Objects.requireNonNull(db.queryForObject("SELECT count(*) FROM sys_tenant_member m JOIN iam_user u ON u.id=m.user_id WHERE m.tenant_id=:tenant AND m.id=:owner AND m.status='ACTIVE' AND u.status='ACTIVE' AND (:leadWriteAll OR (:leadWriteDepartment AND m.department_id=:department) OR m.id=:member) AND EXISTS(SELECT 1 FROM sys_member_role r JOIN sys_role_policy rp ON rp.tenant_id=r.tenant_id AND rp.role_code=r.role_code WHERE r.tenant_id=m.tenant_id AND r.member_id=m.id AND rp.lead_can_write)",p,Integer.class));if(count!=1)throw ApiError.bad("线索负责人无效或超出权限");}
     private LeadCreate normalize(LeadCreate l){return new LeadCreate(text(l.name()),text(l.companyName()),text(l.industry()),text(l.source()),text(l.region()),text(l.jobTitle()),text(l.phone()),text(l.email()),text(l.description()),l.ownerMemberId());}
     private Map<String,Object> leadParams(AuthService.Actor a,UUID id,LeadCreate l){var p=params(a);p.put("id",id);p.put("name",text(l.name()));p.put("company",text(l.companyName()));p.put("industry",text(l.industry()));p.put("source",text(l.source()));p.put("region",text(l.region()));p.put("title",text(l.jobTitle()));p.put("phone",text(l.phone()));p.put("email",text(l.email()));p.put("description",text(l.description()));p.put("owner",l.ownerMemberId());return p;}
-    public Lead createLead(AuthService.Session s,LeadCreate input,String key,UUID trace){var l=normalize(input);return scoped(s,false,true,a->{UUID id=once(a,"lead.create",key,l,()->{UUID created=UUID.randomUUID();var p=leadParams(a,created,l);owner(p);db.update("INSERT INTO crm_lead(id,tenant_id,contact_name,company_name,industry,source_code,region,job_title,phone,email,description,owner_member_id) VALUES(:id,:tenant,:name,:company,:industry,:source,:region,:title,:phone,:email,:description,:owner)",p);audit(a,"LEAD_CREATED","LEAD",created,0,trace);return created;});return lead(a,id);});}
+    public Lead createLead(AuthService.Session s,LeadCreate input,String key,UUID trace){var l=normalize(input);return scoped(s,false,true,a->{UUID id=once(a,"lead.create",key,l,()->{UUID created=UUID.randomUUID();var p=leadParams(a,created,l);owner(p);foundation.checkCapacity(a,l.ownerMemberId(),"LEAD");db.update("INSERT INTO crm_lead(id,tenant_id,contact_name,company_name,industry,source_code,region,job_title,phone,email,description,owner_member_id) VALUES(:id,:tenant,:name,:company,:industry,:source,:region,:title,:phone,:email,:description,:owner)",p);audit(a,"LEAD_CREATED","LEAD",created,0,trace);return created;});return lead(a,id);});}
     public static void transition(String from,String to){
         var choices=Map.of("NEW",Set.of("NEW","CONTACTED","UNQUALIFIED"),"CONTACTED",Set.of("CONTACTED","QUALIFIED","UNQUALIFIED"),"QUALIFIED",Set.of("QUALIFIED","CONTACTED","UNQUALIFIED"),"UNQUALIFIED",Set.of("UNQUALIFIED","NEW"));
         if(!choices.getOrDefault(from,Set.of()).contains(to))throw ApiError.bad("线索状态转换无效，请按联系和确认流程推进");
@@ -121,7 +122,7 @@ public class BusinessService {
     public Lead editLead(AuthService.Session s,UUID id,LeadEdit input,UUID trace){return scoped(s,false,true,a->{
         var current=lead(a,id);if("CONVERTED".equals(current.status()))throw ApiError.conflict("该线索已转换，原始线索保持只读");if(!current.canWrite())throw ApiError.forbidden("无权编辑该线索");
         if(current.version()!=input.expectedVersion())throw ApiError.conflict("线索已变化，请刷新后再保存");transition(current.status(),input.status());
-        var p=leadParams(a,id,new LeadCreate(input.name(),input.companyName(),input.industry(),input.source(),input.region(),input.jobTitle(),input.phone(),input.email(),input.description(),input.ownerMemberId()));owner(p);p.put("version",input.expectedVersion());p.put("status",input.status());
+        var p=leadParams(a,id,new LeadCreate(input.name(),input.companyName(),input.industry(),input.source(),input.region(),input.jobTitle(),input.phone(),input.email(),input.description(),input.ownerMemberId()));owner(p);if(!current.ownerMemberId().equals(input.ownerMemberId()))foundation.checkCapacity(a,input.ownerMemberId(),"LEAD");p.put("version",input.expectedVersion());p.put("status",input.status());
         int changed=db.update("UPDATE crm_lead SET contact_name=:name,company_name=:company,industry=:industry,source_code=:source,region=:region,job_title=:title,phone=:phone,email=:email,description=:description,owner_member_id=:owner,status=:status,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version AND status<>'CONVERTED'",p);
         if(changed!=1)throw ApiError.conflict("线索已变化，请刷新后再保存");audit(a,"LEAD_UPDATED","LEAD",id,input.expectedVersion()+1,trace);return lead(a,id);
     });}

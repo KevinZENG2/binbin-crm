@@ -48,7 +48,9 @@ public class DevelopmentSeed implements ApplicationRunner {
         });
     }
     private void member(NamedParameterJdbcTemplate db,int tenant,int member,int user,String name,String[] roles) {
-        db.update("INSERT INTO sys_tenant_member(id,tenant_id,user_id,display_name) VALUES(:id,:tenant,:user,:name) ON CONFLICT DO NOTHING",Map.of("id",id(member),"tenant",id(tenant),"user",id(user),"name",name));
+        String title=java.util.Arrays.asList(roles).contains("TENANT_ADMIN")?"企业管理员":java.util.Arrays.asList(roles).contains("SALES_MANAGER")?"销售经理":java.util.Arrays.asList(roles).contains("SALES")?"客户经理":"分析员";
+        db.update("INSERT INTO sys_tenant_member(id,tenant_id,user_id,display_name,employee_code,job_title,sales_region,service_status) VALUES(:id,:tenant,:user,:name,:code,:title,:region,'AVAILABLE') ON CONFLICT DO NOTHING",Map.of("id",id(member),"tenant",id(tenant),"user",id(user),"name",name,"code","EMP-"+member,"title",title,"region",tenant==1?"华东区":"全国"));
+        db.update("INSERT INTO crm_sales_resource_policy(id,tenant_id,member_id) VALUES(:id,:tenant,:member) ON CONFLICT DO NOTHING",Map.of("id",UUID.randomUUID(),"tenant",id(tenant),"member",id(member)));
         for(String role:roles)db.update("INSERT INTO sys_member_role(tenant_id,member_id,role_code) VALUES(:tenant,:member,:role) ON CONFLICT DO NOTHING",Map.of("tenant",id(tenant),"member",id(member),"role",role));
     }
     private void customer(NamedParameterJdbcTemplate db,int tenant,int customer,int owner,String name) { db.update("INSERT INTO crm_customer(id,tenant_id,customer_name,industry,level_code,source_code,region,owner_member_id,description) VALUES(:id,:tenant,:name,'制造业','B','测试初始化','上海',:owner,'仅供开发验收，不代表真实企业') ON CONFLICT DO NOTHING",Map.of("id",id(customer),"tenant",id(tenant),"owner",id(owner),"name",name)); }
