@@ -26,8 +26,8 @@ public class SalesFoundationService {
     public List<Map<String,Object>> policies(AuthService.Session s){return scoped(s,false,a->db.queryForList("""
         SELECT m.id AS "memberId",m.display_name AS "memberName",m.employee_code AS "employeeCode",m.job_title AS "jobTitle",m.sales_region AS "salesRegion",m.service_status AS "serviceStatus",m.status,
          p.id,p.lead_limit AS "leadLimit",p.customer_limit AS "customerLimit",p.overflow_action AS "overflowAction",p.lead_stale_days AS "leadStaleDays",p.customer_stale_days AS "customerStaleDays",p.version,
-         (SELECT count(*) FROM crm_lead l WHERE l.tenant_id=m.tenant_id AND l.owner_member_id=m.id AND l.status NOT IN('UNQUALIFIED','CONVERTED')) AS "leadCount",
-         (SELECT count(*) FROM crm_customer c WHERE c.tenant_id=m.tenant_id AND c.owner_member_id=m.id) AS "customerCount"
+         (SELECT count(*) FROM crm_lead l WHERE l.tenant_id=m.tenant_id AND l.owner_member_id=m.id AND NOT l.in_pool AND l.status NOT IN('UNQUALIFIED','CONVERTED')) AS "leadCount",
+         (SELECT count(*) FROM crm_customer c WHERE c.tenant_id=m.tenant_id AND c.owner_member_id=m.id AND NOT c.in_pool) AS "customerCount"
         FROM sys_tenant_member m JOIN crm_sales_resource_policy p ON p.tenant_id=m.tenant_id AND p.member_id=m.id
         WHERE m.tenant_id=:tenant ORDER BY m.status,m.display_name,m.id
         """,Map.of("tenant",a.tenant().id())));}
@@ -45,7 +45,7 @@ public class SalesFoundationService {
         ensureMemberPolicy(a.tenant().id(),owner);var p=map("tenant",a.tenant().id(),"member",owner);
         var policy=db.queryForMap("SELECT lead_limit,customer_limit,overflow_action FROM crm_sales_resource_policy WHERE tenant_id=:tenant AND member_id=:member FOR UPDATE",p);
         boolean lead="LEAD".equals(type);int limit=((Number)policy.get(lead?"lead_limit":"customer_limit")).intValue();
-        int count=db.queryForObject(lead?"SELECT count(*) FROM crm_lead WHERE tenant_id=:tenant AND owner_member_id=:member AND status NOT IN('UNQUALIFIED','CONVERTED')":"SELECT count(*) FROM crm_customer WHERE tenant_id=:tenant AND owner_member_id=:member",p,Integer.class);
+        int count=db.queryForObject(lead?"SELECT count(*) FROM crm_lead WHERE tenant_id=:tenant AND owner_member_id=:member AND NOT in_pool AND status NOT IN('UNQUALIFIED','CONVERTED')":"SELECT count(*) FROM crm_customer WHERE tenant_id=:tenant AND owner_member_id=:member AND NOT in_pool",p,Integer.class);
         if(count<limit)return;
         if("BLOCK".equals(policy.get("overflow_action")))throw new ApiError(HttpStatus.CONFLICT,lead?"LEAD_HOLDING_LIMIT":"CUSTOMER_HOLDING_LIMIT",lead?"该销售的线索保有量已达上限":"该销售的客户保有量已达上限");
         db.update("INSERT INTO crm_resource_alert(id,tenant_id,member_id,resource_type,current_count,limit_value,actor_member_id) VALUES(:id,:tenant,:member,:type,:count,:limit,:actor)",map("id",UUID.randomUUID(),"tenant",a.tenant().id(),"member",owner,"type",type,"count",count,"limit",limit,"actor",a.tenant().memberId()));

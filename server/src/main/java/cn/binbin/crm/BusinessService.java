@@ -35,8 +35,9 @@ public class BusinessService {
     private final AuthService auth;
     private final CustomerService customers;
     private final SalesFoundationService foundation;
+    private final ResourcePoolService resourcePools;
     private final ObjectMapper json;
-    public BusinessService(NamedParameterJdbcTemplate db,TransactionTemplate tx,AuthService auth,CustomerService customers,SalesFoundationService foundation,ObjectMapper json){this.db=db;this.tx=tx;this.auth=auth;this.customers=customers;this.foundation=foundation;this.json=json;}
+    public BusinessService(NamedParameterJdbcTemplate db,TransactionTemplate tx,AuthService auth,CustomerService customers,SalesFoundationService foundation,ResourcePoolService resourcePools,ObjectMapper json){this.db=db;this.tx=tx;this.auth=auth;this.customers=customers;this.foundation=foundation;this.resourcePools=resourcePools;this.json=json;}
     private static String text(String value){return value==null?"":value.strip();}
     private <T> T scoped(AuthService.Session s,boolean contacts,boolean write,Function<AuthService.Actor,T> fn){
         return tx.execute(status->{
@@ -93,7 +94,7 @@ public class BusinessService {
         if(changed!=1)throw ApiError.conflict("联系人已变化，请刷新后再保存");audit(a,"CONTACT_UPDATED","CONTACT",id,input.expectedVersion()+1,trace);return contact(a,id);
     });}
     private static final String LEAD_DEPARTMENT="EXISTS(SELECT 1 FROM sys_tenant_member lm WHERE lm.tenant_id=l.tenant_id AND lm.id=l.owner_member_id AND lm.department_id=:department)";
-    static final String LEAD_READ="l.tenant_id=:tenant AND (:leadReadAll OR (:leadReadDepartment AND "+LEAD_DEPARTMENT+") OR l.owner_member_id=:member)";
+    static final String LEAD_READ="l.tenant_id=:tenant AND NOT l.in_pool AND (:leadReadAll OR (:leadReadDepartment AND "+LEAD_DEPARTMENT+") OR l.owner_member_id=:member)";
     private static final String LEAD_WRITE="(:leadWriter AND (:leadWriteAll OR (:leadWriteDepartment AND "+LEAD_DEPARTMENT+") OR l.owner_member_id=:member))";
     private static final String VISIBLE_CUSTOMER="(:customerReader AND c.id IS NOT NULL AND ("+CustomerService.READ+"))";
     private static final String LEAD_FROM=" FROM crm_lead l JOIN sys_tenant_member m ON m.tenant_id=l.tenant_id AND m.id=l.owner_member_id LEFT JOIN crm_customer c ON c.tenant_id=l.tenant_id AND c.id=l.converted_customer_id ";
@@ -124,7 +125,7 @@ public class BusinessService {
         if(current.version()!=input.expectedVersion())throw ApiError.conflict("线索已变化，请刷新后再保存");transition(current.status(),input.status());
         var p=leadParams(a,id,new LeadCreate(input.name(),input.companyName(),input.industry(),input.source(),input.region(),input.jobTitle(),input.phone(),input.email(),input.description(),input.ownerMemberId()));owner(p);if(!current.ownerMemberId().equals(input.ownerMemberId()))foundation.checkCapacity(a,input.ownerMemberId(),"LEAD");p.put("version",input.expectedVersion());p.put("status",input.status());
         int changed=db.update("UPDATE crm_lead SET contact_name=:name,company_name=:company,industry=:industry,source_code=:source,region=:region,job_title=:title,phone=:phone,email=:email,description=:description,owner_member_id=:owner,status=:status,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version AND status<>'CONVERTED'",p);
-        if(changed!=1)throw ApiError.conflict("线索已变化，请刷新后再保存");audit(a,"LEAD_UPDATED","LEAD",id,input.expectedVersion()+1,trace);return lead(a,id);
+        if(changed!=1)throw ApiError.conflict("线索已变化，请刷新后再保存");if(!current.ownerMemberId().equals(input.ownerMemberId()))resourcePools.directTransfer(a,"LEAD",id,current.ownerMemberId(),input.ownerMemberId(),input.expectedVersion()+1,trace);audit(a,"LEAD_UPDATED","LEAD",id,input.expectedVersion()+1,trace);return lead(a,id);
     });}
     public Lead convert(AuthService.Session s,UUID id,Convert input,String key,UUID trace){
         Convert normalized=new Convert(input.expectedVersion(),input.targetCustomerId(),input.customerName()==null?null:text(input.customerName()),input.customerLevel(),input.ownerMemberId(),input.primaryContact());
