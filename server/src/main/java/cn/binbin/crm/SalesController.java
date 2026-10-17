@@ -3,6 +3,7 @@ package cn.binbin.crm;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
+import java.time.LocalDate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +15,12 @@ public class SalesController {
     @GetMapping("/sales/summary") public Object summary(HttpServletRequest r){return sales.summary(session(r));}
     @GetMapping("/opportunities") public Object opportunities(@RequestParam(defaultValue="1") int page,@RequestParam(defaultValue="20") int pageSize,@RequestParam(defaultValue="") String q,@RequestParam(defaultValue="") String stage,@RequestParam(required=false) UUID customerId,HttpServletRequest r){return sales.opportunities(session(r),page,pageSize,q,stage,customerId);}
     @GetMapping("/opportunities/board") public Object board(@RequestParam(defaultValue="") String q,@RequestParam(required=false) UUID customerId,HttpServletRequest r){return sales.board(session(r),q,customerId);}
+    @GetMapping("/opportunities/forecast") public Object forecast(@RequestParam LocalDate from,@RequestParam LocalDate to,HttpServletRequest r){return sales.forecast(session(r),from,to);}
     @GetMapping("/opportunities/owners") public Object opportunityOwners(HttpServletRequest r){return sales.owners(session(r),"opportunity");}
     @GetMapping("/opportunities/{id}") public Object opportunity(@PathVariable UUID id,HttpServletRequest r){return sales.opportunity(session(r),id);}
     @GetMapping("/opportunities/{id}/history") public Object history(@PathVariable UUID id,@RequestParam(defaultValue="1") int page,@RequestParam(defaultValue="20") int pageSize,HttpServletRequest r){return sales.history(session(r),id,page,pageSize);}
+    @GetMapping("/opportunities/{id}/lines") public Object lines(@PathVariable UUID id,HttpServletRequest r){return sales.opportunityLines(session(r),id);}
+    @PutMapping("/opportunities/{id}/lines") public Object saveLines(@PathVariable UUID id,@Valid @RequestBody SalesService.OpportunityLines input,HttpServletRequest r){return sales.saveOpportunityLines(session(r),id,input,RequestSafety.trace(r));}
     @PostMapping("/opportunities") public Object createOpportunity(@Valid @RequestBody SalesService.OpportunityCreate input,@RequestHeader("Idempotency-Key") String key,HttpServletRequest r){return ResponseEntity.status(201).body(sales.createOpportunity(session(r),input,key,RequestSafety.trace(r)));}
     @PatchMapping("/opportunities/{id}") public Object editOpportunity(@PathVariable UUID id,@Valid @RequestBody SalesService.OpportunityEdit input,HttpServletRequest r){return sales.editOpportunity(session(r),id,input,RequestSafety.trace(r));}
     @PostMapping("/opportunities/{id}/stage") public Object stage(@PathVariable UUID id,@Valid @RequestBody SalesService.StageInput input,@RequestHeader("Idempotency-Key") String key,HttpServletRequest r){return sales.stage(session(r),id,input,key,RequestSafety.trace(r));}
