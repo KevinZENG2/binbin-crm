@@ -50,4 +50,4 @@ done | tr -d '\n' | base64 -d > release.tgz
 printf '%s  release.tgz\n' "$CRM_RELEASE_SHA256" | sha256sum -c -
 tar -xzf release.tgz
 mvn -f server/pom.xml -B -ntp verify
-exec java -XX:MaxRAMPercentage=50 -jar server/target/crm-server-0.16.0.jar --spring.web.resources.static-locations=file:/opt/crm/dist/
+exec java -XX:MaxRAMPercentage=50 -jar server/target/crm-server-0.17.0.jar --spring.web.resources.static-locations=file:/opt/crm/dist/
