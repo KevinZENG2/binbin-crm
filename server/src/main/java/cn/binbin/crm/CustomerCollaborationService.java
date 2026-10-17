@@ -73,7 +73,7 @@ public class CustomerCollaborationService {
     public Object merge(AuthService.Session s,UUID source,MergeInput input,UUID trace){return scoped(s,true,a->{if(!a.canWriteCustomers()||!a.businessAccess().contactWrite())throw ApiError.forbidden("合并需要客户和联系人维护权限");if(source.equals(input.targetCustomerId()))throw ApiError.bad("不能合并同一客户");if(!a.admin()&&!a.access().writeAll())throw ApiError.forbidden("需要企业管理员或销售经理权限");
         if(!a.access().creditRead()||!a.access().descriptionRead())throw ApiError.forbidden("合并需要客户信用代码和备注读取权限，请联系企业管理员");
         UUID target=input.targetCustomerId(),tenant=a.tenant().id();var ids=List.of(source,target).stream().sorted().toList();
-        for(UUID id:ids)db.queryForObject("SELECT id FROM crm_customer WHERE tenant_id=:tenant AND id=:id FOR UPDATE",p("tenant",tenant,"id",id),UUID.class);
+        for(UUID id:ids)if(db.queryForList("SELECT id FROM crm_customer WHERE tenant_id=:tenant AND id=:id FOR UPDATE",p("tenant",tenant,"id",id),UUID.class).isEmpty())throw ApiError.missing();
         var from=customers.get(a,source);var to=customers.get(a,target);if(!from.canWrite()||!to.canWrite())throw ApiError.forbidden("两位客户都必须在可编辑范围内");
         if(from.version()!=input.sourceVersion()||to.version()!=input.targetVersion())throw ApiError.conflict("客户信息已变化，请重新检查合并对象");
         sourceMustBeSimple(tenant,source);
