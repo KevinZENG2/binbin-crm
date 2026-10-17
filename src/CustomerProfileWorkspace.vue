@@ -65,7 +65,7 @@ watch(()=>[props.targetType,props.targetId],()=>{candidates.value=[];mergeTarget
  <section class="profile-workspace">
   <header class="page-heading"><div><span class="eyebrow">CUSTOMER RELATIONSHIP 360°</span><h1>{{title}}</h1><p>{{targetType==='CUSTOMER'?'客户档案、关联业务与互动时间线':'跨层级跟进计划与结果记录'}} · {{targetType==='LEAD'?'线索':targetType==='OPPORTUNITY'?'商机':'客户'}}</p></div><div class="profile-actions"><button class="btn secondary" @click="emit('close')">返回列表</button><button class="btn secondary" :disabled="busy" @click="refresh"><Icon name="refresh" :size="16"/>刷新</button></div></header>
   <p v-if="error" class="profile-message error" role="alert">{{error}}</p><p v-if="notice" class="profile-message" role="status">{{notice}}</p>
-  <div v-if="!profile&&!target" class="card profile-card">正在加载档案…</div>
+  <div v-if="!profile&&!target" class="card profile-card">{{busy?'正在加载档案…':'档案不可用，请返回列表或刷新重试'}}</div>
   <template v-else>
    <section v-if="profile" class="card profile-card"><div class="profile-heading"><div><small>客户概览</small><h2>{{profile.customer.name}}</h2><p>{{profile.customer.industry}} · {{profile.customer.level}} 级 · {{profile.customer.region||'地区未填写'}} · 负责人 {{profile.customer.ownerName}}</p></div><span class="badge green">{{labels[profile.lifecycle]||profile.lifecycle}}</span></div>
     <div class="profile-tags"><span v-for="t in profile.tags" :key="t.id" :style="{borderColor:t.color}">{{t.name}}</span><span v-if="!profile.tags.length">暂无标签，可在行业配置中心设置</span></div>

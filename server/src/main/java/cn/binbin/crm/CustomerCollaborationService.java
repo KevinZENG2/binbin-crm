@@ -79,8 +79,11 @@ public class CustomerCollaborationService {
         sourceMustBeSimple(tenant,source);
         if(from.creditCode()!=null&&to.creditCode()!=null&&!from.creditCode().equals(to.creditCode()))throw ApiError.conflict("两位客户的信用代码不同，不允许合并");
         var x=p("tenant",tenant,"source",source,"target",target,"actor",a.tenant().memberId(),"sv",input.sourceVersion(),"tv",input.targetVersion());
+        var sourcePrimary=db.queryForList("SELECT id FROM crm_contact WHERE tenant_id=:tenant AND customer_id=:source AND is_primary",x,UUID.class);
+        boolean targetHasPrimary=db.queryForObject("SELECT EXISTS(SELECT 1 FROM crm_contact WHERE tenant_id=:tenant AND customer_id=:target AND is_primary)",x,Boolean.class);
         db.update("UPDATE crm_contact SET is_primary=false,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND customer_id=:source AND is_primary",x);
         db.update("UPDATE crm_contact SET customer_id=:target,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND customer_id=:source",x);
+        if(!targetHasPrimary&&!sourcePrimary.isEmpty())db.update("UPDATE crm_contact SET is_primary=true,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND customer_id=:target AND id=:primary",with(x,"primary",sourcePrimary.getFirst()));
         db.update("INSERT INTO crm_customer_tag(tenant_id,customer_id,tag_id,assigned_by_member_id) SELECT :tenant,:target,tag_id,:actor FROM crm_customer_tag WHERE tenant_id=:tenant AND customer_id=:source ON CONFLICT DO NOTHING",x);
         db.update("INSERT INTO crm_custom_value(id,tenant_id,field_id,entity_type,record_id,value,updated_by_member_id) SELECT gen_random_uuid(),tenant_id,field_id,entity_type,:target,value,:actor FROM crm_custom_value WHERE tenant_id=:tenant AND entity_type='CUSTOMER' AND record_id=:source ON CONFLICT DO NOTHING",x);
         db.update("INSERT INTO crm_customer_share(tenant_id,customer_id,member_id,can_write,expires_at) SELECT :tenant,:target,member_id,can_write,expires_at FROM crm_customer_share WHERE tenant_id=:tenant AND customer_id=:source AND member_id<>(SELECT owner_member_id FROM crm_customer WHERE tenant_id=:tenant AND id=:target) ON CONFLICT DO NOTHING",x);
