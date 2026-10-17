@@ -54,6 +54,7 @@ public class ResourcePoolService {
             String source=table(kind),name=kind.equals("LEAD")?"r.company_name":"r.customer_name";
             String state=mode.equals("pool")?"r.in_pool":mode.equals("mine")?"NOT r.in_pool AND r.owner_member_id=:member":"NOT r.in_pool";
             if(kind.equals("LEAD"))state+=" AND r.status NOT IN ('CONVERTED','UNQUALIFIED')";
+            else state+=" AND r.merged_into_customer_id IS NULL";
             String from=" FROM "+source+" r JOIN sys_tenant_member m ON m.tenant_id=r.tenant_id AND m.id=r.owner_member_id WHERE r.tenant_id=:tenant AND "+state+
                 " AND (:q='' OR strpos(lower("+name+"),lower(:q))>0)";
             var args=p("tenant",a.tenant().id(),"member",a.tenant().memberId(),"q",q.strip(),"limit",size,"offset",((long)page-1)*size);
@@ -68,7 +69,7 @@ public class ResourcePoolService {
         return db.queryForList("SELECT m.id,m.display_name AS name,m.department_id AS \"departmentId\" FROM sys_tenant_member m JOIN iam_user u ON u.id=m.user_id WHERE m.tenant_id=:tenant AND m.status='ACTIVE' AND u.status='ACTIVE' AND EXISTS(SELECT 1 FROM sys_member_role mr JOIN sys_role_policy rp ON rp.tenant_id=mr.tenant_id AND rp.role_code=mr.role_code WHERE mr.tenant_id=m.tenant_id AND mr.member_id=m.id AND rp."+permission+") ORDER BY m.display_name,m.id",p("tenant",a.tenant().id()));
     });}
     private Map<String,Object> locked(UUID tenant,String kind,UUID id){
-        var rows=db.queryForList("SELECT id,owner_member_id,in_pool,version"+(kind.equals("LEAD")?",status":"")+" FROM "+table(kind)+" WHERE tenant_id=:tenant AND id=:id FOR UPDATE",p("tenant",tenant,"id",id));
+        var rows=db.queryForList("SELECT id,owner_member_id,in_pool,version"+(kind.equals("LEAD")?",status":"")+" FROM "+table(kind)+" WHERE tenant_id=:tenant AND id=:id"+(kind.equals("CUSTOMER")?" AND merged_into_customer_id IS NULL":"")+" FOR UPDATE",p("tenant",tenant,"id",id));
         if(rows.isEmpty())throw ApiError.missing();return rows.getFirst();
     }
     private void current(Map<String,Object> row,long version){if(((Number)row.get("version")).longValue()!=version)throw ApiError.conflict("资源已被其他人处理，请刷新后重试");}
@@ -142,7 +143,7 @@ public class ResourcePoolService {
     void offboard(AuthService.Actor a,UUID member,UUID successor,UUID trace){
         if(member.equals(successor))throw ApiError.bad("接收成员不能是停用成员本人");
         for(String kind:List.of("LEAD","CUSTOMER")){
-            var ids=db.queryForList("SELECT id FROM "+table(kind)+" WHERE tenant_id=:tenant AND owner_member_id=:member AND NOT in_pool"+(kind.equals("LEAD")?" AND status<>'CONVERTED'":"")+" ORDER BY id",p("tenant",a.tenant().id(),"member",member),UUID.class);
+            var ids=db.queryForList("SELECT id FROM "+table(kind)+" WHERE tenant_id=:tenant AND owner_member_id=:member AND NOT in_pool"+(kind.equals("LEAD")?" AND status<>'CONVERTED'":" AND merged_into_customer_id IS NULL")+" ORDER BY id",p("tenant",a.tenant().id(),"member",member),UUID.class);
             if(!ids.isEmpty())recipient(a.tenant().id(),kind,successor);
             for(UUID id:ids){var row=locked(a.tenant().id(),kind,id);if(!(boolean)row.get("in_pool")&&member.equals(row.get("owner_member_id")))move(a,kind,id,row,successor,"OFFBOARD_TRANSFER","成员停用自动转交",trace);}
         }
@@ -152,7 +153,7 @@ public class ResourcePoolService {
         for(String kind:List.of("LEAD","CUSTOMER")){
             String source=table(kind),stale=kind.equals("LEAD")?"p.lead_stale_days":"p.customer_stale_days";
             String age=kind.equals("LEAD")?"GREATEST(r.updated_at,r.last_assigned_at)":"GREATEST(r.updated_at,r.last_assigned_at,coalesce((SELECT max(a.occurred_at) FROM crm_activity a WHERE a.tenant_id=r.tenant_id AND a.customer_id=r.id),r.created_at))";
-            String ready=kind.equals("LEAD")?" AND r.status NOT IN('CONVERTED','UNQUALIFIED')":" AND NOT EXISTS(SELECT 1 FROM crm_opportunity o WHERE o.tenant_id=r.tenant_id AND o.customer_id=r.id AND o.stage NOT IN('WON','LOST')) AND NOT EXISTS(SELECT 1 FROM crm_contract c WHERE c.tenant_id=r.tenant_id AND c.customer_id=r.id AND c.status IN('SIGNED','ACTIVE')) AND NOT EXISTS(SELECT 1 FROM crm_ticket t WHERE t.tenant_id=r.tenant_id AND t.customer_id=r.id AND t.status IN('NEW','IN_PROGRESS','WAITING_CUSTOMER')) AND NOT EXISTS(SELECT 1 FROM crm_task task WHERE task.tenant_id=r.tenant_id AND task.customer_id=r.id AND task.status='PENDING')";
+            String ready=kind.equals("LEAD")?" AND r.status NOT IN('CONVERTED','UNQUALIFIED')":" AND r.merged_into_customer_id IS NULL AND NOT EXISTS(SELECT 1 FROM crm_opportunity o WHERE o.tenant_id=r.tenant_id AND o.customer_id=r.id AND o.stage NOT IN('WON','LOST')) AND NOT EXISTS(SELECT 1 FROM crm_contract c WHERE c.tenant_id=r.tenant_id AND c.customer_id=r.id AND c.status IN('SIGNED','ACTIVE')) AND NOT EXISTS(SELECT 1 FROM crm_ticket t WHERE t.tenant_id=r.tenant_id AND t.customer_id=r.id AND t.status IN('NEW','IN_PROGRESS','WAITING_CUSTOMER')) AND NOT EXISTS(SELECT 1 FROM crm_task task WHERE task.tenant_id=r.tenant_id AND task.customer_id=r.id AND task.status='PENDING')";
             var ids=db.queryForList("SELECT r.id FROM "+source+" r JOIN crm_sales_resource_policy p ON p.tenant_id=r.tenant_id AND p.member_id=r.owner_member_id WHERE r.tenant_id=:tenant AND NOT r.in_pool"+ready+" AND "+age+"<now()-make_interval(days=>"+stale+") ORDER BY r.updated_at,r.id LIMIT 50 FOR UPDATE OF r SKIP LOCKED",p("tenant",tenant),UUID.class);
             for(UUID id:ids){var row=locked(tenant,kind,id);update(tenant,kind,id,null);movement(tenant,kind,id,"AUTO_RECYCLE",(UUID)row.get("owner_member_id"),null,null,"超过未跟进期限",((Number)row.get("version")).longValue()+1,null);count++;}
         }return count;

@@ -15,10 +15,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class BusinessService {
     public record ContactCreate(@NotNull UUID customerId,@NotBlank @Size(max=100) String name,@Size(max=100) String jobTitle,
-        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description) {}
+        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description,
+        @Pattern(regexp="DECISION_MAKER|INFLUENCER|USER|GATEKEEPER|OTHER") String decisionRole,@Pattern(regexp="HIGH|MEDIUM|LOW|UNKNOWN") String influence,
+        @Pattern(regexp="PHONE|EMAIL|WECHAT|IN_PERSON|ANY") String contactPreference) {
+        public ContactCreate(UUID customerId,String name,String jobTitle,String phone,String email,boolean primary,String description){this(customerId,name,jobTitle,phone,email,primary,description,"OTHER","UNKNOWN","ANY");}
+    }
     public record ContactEdit(@NotNull @Min(0) Long expectedVersion,@NotNull UUID customerId,@NotBlank @Size(max=100) String name,@Size(max=100) String jobTitle,
-        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description) {}
-    public record Contact(UUID id,UUID customerId,String customerName,String name,String jobTitle,String phone,String email,boolean primary,String description,long version,Instant updatedAt,boolean canWrite,boolean canRelink) {}
+        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description,
+        @Pattern(regexp="DECISION_MAKER|INFLUENCER|USER|GATEKEEPER|OTHER") String decisionRole,@Pattern(regexp="HIGH|MEDIUM|LOW|UNKNOWN") String influence,
+        @Pattern(regexp="PHONE|EMAIL|WECHAT|IN_PERSON|ANY") String contactPreference) {}
+    public record Contact(UUID id,UUID customerId,String customerName,String name,String jobTitle,String phone,String email,boolean primary,String description,long version,Instant updatedAt,boolean canWrite,boolean canRelink,String decisionRole,String influence,String contactPreference) {}
     public record LeadCreate(@NotBlank @Size(max=100) String name,@NotBlank @Size(max=200) String companyName,@NotBlank @Size(max=80) String industry,
         @NotBlank @Size(max=80) String source,@Size(max=100) String region,@Size(max=100) String jobTitle,@Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,
         @Email @Size(max=254) String email,@Size(max=4000) String description,@NotNull UUID ownerMemberId) {}
@@ -62,7 +68,7 @@ public class BusinessService {
     }
     private static final String CONTACT_FROM=" FROM crm_contact ct JOIN crm_customer c ON c.tenant_id=ct.tenant_id AND c.id=ct.customer_id ";
     private static final String CONTACT_SELECT="SELECT ct.*,c.customer_name,(:contactWriter AND "+CustomerService.WRITE+") AS can_write,NOT EXISTS(SELECT 1 FROM crm_lead linked WHERE linked.tenant_id=ct.tenant_id AND linked.converted_contact_id=ct.id) AS can_relink"+CONTACT_FROM;
-    private Contact contactRow(ResultSet r)throws SQLException{return new Contact(r.getObject("id",UUID.class),r.getObject("customer_id",UUID.class),r.getString("customer_name"),r.getString("full_name"),r.getString("job_title"),r.getString("phone"),r.getString("email"),r.getBoolean("is_primary"),r.getString("description"),r.getLong("version"),r.getTimestamp("updated_at").toInstant(),r.getBoolean("can_write"),r.getBoolean("can_relink"));}
+    private Contact contactRow(ResultSet r)throws SQLException{return new Contact(r.getObject("id",UUID.class),r.getObject("customer_id",UUID.class),r.getString("customer_name"),r.getString("full_name"),r.getString("job_title"),r.getString("phone"),r.getString("email"),r.getBoolean("is_primary"),r.getString("description"),r.getLong("version"),r.getTimestamp("updated_at").toInstant(),r.getBoolean("can_write"),r.getBoolean("can_relink"),r.getString("decision_role"),r.getString("influence"),r.getString("contact_preference"));}
     Contact contact(AuthService.Actor a,UUID id){var p=params(a);p.put("id",id);var found=db.query(CONTACT_SELECT+"WHERE "+CustomerService.READ+" AND ct.id=:id",p,(r,i)->contactRow(r));if(found.isEmpty())throw ApiError.missing();return found.getFirst();}
     private static void page(int page,int size,String q){if(page<1||page>100000||size<1||size>100||q.length()>100)throw ApiError.bad("分页或搜索条件无效");}
     public Page<Contact> contacts(AuthService.Session s,int page,int size,String q,UUID customerId){page(page,size,q);return scoped(s,true,false,a->{
@@ -75,12 +81,12 @@ public class BusinessService {
     public Contact contact(AuthService.Session s,UUID id){return scoped(s,true,false,a->contact(a,id));}
     private void customerWrite(AuthService.Actor a,UUID id){if(!customers.get(a,id).canWrite())throw ApiError.forbidden("无权编辑该客户及其联系人");}
     private void primary(Map<String,Object> p){db.update("UPDATE crm_contact SET is_primary=false,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND customer_id=:customer AND is_primary AND id<>:id",p);}
-    private Map<String,Object> contactParams(AuthService.Actor a,UUID id,ContactCreate c){var p=params(a);p.put("id",id);p.put("customer",c.customerId());p.put("name",text(c.name()));p.put("title",text(c.jobTitle()));p.put("phone",text(c.phone()));p.put("email",text(c.email()));p.put("primary",c.primary());p.put("description",text(c.description()));return p;}
-    private ContactCreate normalize(ContactCreate c){return new ContactCreate(c.customerId(),text(c.name()),text(c.jobTitle()),text(c.phone()),text(c.email()),c.primary(),text(c.description()));}
+    private Map<String,Object> contactParams(AuthService.Actor a,UUID id,ContactCreate c){var p=params(a);p.put("id",id);p.put("customer",c.customerId());p.put("name",text(c.name()));p.put("title",text(c.jobTitle()));p.put("phone",text(c.phone()));p.put("email",text(c.email()));p.put("primary",c.primary());p.put("description",text(c.description()));p.put("decision",c.decisionRole());p.put("influence",c.influence());p.put("preference",c.contactPreference());return p;}
+    private ContactCreate normalize(ContactCreate c){return new ContactCreate(c.customerId(),text(c.name()),text(c.jobTitle()),text(c.phone()),text(c.email()),c.primary(),text(c.description()),c.decisionRole()==null?"OTHER":c.decisionRole(),c.influence()==null?"UNKNOWN":c.influence(),c.contactPreference()==null?"ANY":c.contactPreference());}
     private UUID insertContact(AuthService.Actor a,ContactCreate c,UUID trace){
         if(!a.businessAccess().contactWrite())throw ApiError.forbidden("当前角色没有联系人写入权限");customerWrite(a,c.customerId());
         UUID id=UUID.randomUUID();var p=contactParams(a,id,c);if(c.primary())primary(p);
-        db.update("INSERT INTO crm_contact(id,tenant_id,customer_id,full_name,job_title,phone,email,is_primary,description) VALUES(:id,:tenant,:customer,:name,:title,:phone,:email,:primary,:description)",p);
+        db.update("INSERT INTO crm_contact(id,tenant_id,customer_id,full_name,job_title,phone,email,is_primary,description,decision_role,influence,contact_preference) VALUES(:id,:tenant,:customer,:name,:title,:phone,:email,:primary,:description,:decision,:influence,:preference)",p);
         audit(a,"CONTACT_CREATED","CONTACT",id,0,trace);return id;
     }
     public Contact createContact(AuthService.Session s,ContactCreate input,String key,UUID trace){var c=normalize(input);return scoped(s,true,true,a->{UUID id=once(a,"contact.create",key,c,()->insertContact(a,c,trace));return contact(a,id);});}
@@ -88,9 +94,9 @@ public class BusinessService {
         var current=contact(a,id);if(!current.canWrite())throw ApiError.forbidden("无权编辑该联系人");
         if(current.version()!=input.expectedVersion())throw ApiError.conflict("联系人已变化，请刷新后再保存");
         if(!current.customerId().equals(input.customerId())&&!current.canRelink())throw ApiError.conflict("线索转换生成的联系人需保留原客户关联");
-        customerWrite(a,input.customerId());var p=contactParams(a,id,new ContactCreate(input.customerId(),input.name(),input.jobTitle(),input.phone(),input.email(),input.primary(),input.description()));p.put("version",input.expectedVersion());
+        customerWrite(a,input.customerId());var p=contactParams(a,id,normalize(new ContactCreate(input.customerId(),input.name(),input.jobTitle(),input.phone(),input.email(),input.primary(),input.description(),input.decisionRole(),input.influence(),input.contactPreference())));p.put("version",input.expectedVersion());
         if(input.primary())primary(p);
-        int changed=db.update("UPDATE crm_contact SET customer_id=:customer,full_name=:name,job_title=:title,phone=:phone,email=:email,is_primary=:primary,description=:description,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version",p);
+        int changed=db.update("UPDATE crm_contact SET customer_id=:customer,full_name=:name,job_title=:title,phone=:phone,email=:email,is_primary=:primary,description=:description,decision_role=:decision,influence=:influence,contact_preference=:preference,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version",p);
         if(changed!=1)throw ApiError.conflict("联系人已变化，请刷新后再保存");audit(a,"CONTACT_UPDATED","CONTACT",id,input.expectedVersion()+1,trace);return contact(a,id);
     });}
     private static final String LEAD_DEPARTMENT="EXISTS(SELECT 1 FROM sys_tenant_member lm WHERE lm.tenant_id=l.tenant_id AND lm.id=l.owner_member_id AND lm.department_id=:department)";
