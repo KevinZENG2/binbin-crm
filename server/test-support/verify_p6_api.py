@@ -81,6 +81,8 @@ owner.req('/performance/targets/'+annual['id'],'PUT',{'memberId':uid(201),'perio
 rule=owner.req('/performance/rules','POST',{'name':'P6累进阶梯','tiers':[{'thresholdCents':0,'rateBps':300},{'thresholdCents':50000,'rateBps':500}],'active':True,'expectedVersion':0})
 calc_body={'memberId':uid(201),'ruleId':rule['id'],'periodStart':str(previous),'expectedVersion':0};commission=owner.req('/performance/commissions/calculate','POST',calc_body)
 check('Progressive tiers apply only to each tier slice',commission['baseCents']==60000 and commission['commissionCents']==2000)
+check('Read-only analytics access does not expose other employees commission',not viewer.req('/performance/commissions?period='+str(previous))['items'])
+viewer.req('/performance/history/COMMISSION/'+commission['id'],status=404)
 owner.req('/performance/commissions/'+commission['id']+'/review','POST',{'expectedVersion':commission['version']},status=403)
 commission=bob.req('/performance/commissions/'+commission['id']+'/review','POST',{'expectedVersion':commission['version'],'reason':'独立复核'})
 extra_body={**receipt_body,'amountCents':1000,'paymentReference':'P6-RC-SOURCE-CHANGE'}
