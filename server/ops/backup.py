@@ -32,6 +32,10 @@ CUSTOMER_COLLABORATION_TABLES=set('crm_customer_lifecycle_history crm_followup'.
 OPPORTUNITY_LINE_TABLES=set('crm_opportunity_line'.split())
 SALES_ORDER_TABLES=set('crm_sales_order_counter crm_sales_order crm_sales_order_line crm_sales_order_event'.split())
 
+P6_FINANCE_TABLES=set('crm_fund_account crm_fund_entry crm_invoice crm_invoice_red crm_expense crm_finance_event'.split())
+P6_SERVICE_TABLES={'crm_service_feedback'}
+P6_PERFORMANCE_TABLES=set('crm_sales_target crm_commission_rule crm_commission_run crm_commission_adjustment crm_sales_weekly_report crm_performance_event'.split())
+
 def schema_sets(version):
     tables=set(BASE_TABLES);rls=set(BASE_RLS)
     for required,group in ((6,COMMERCE_TABLES),(7,APPROVAL_TABLES),(8,CONTRACT_TABLES),(9,RECEIPT_TABLES),(10,SERVICE_TABLES),(11,KNOWLEDGE_TABLES),(12,CAMPAIGN_TABLES),(13,INTEGRATION_TABLES)):
@@ -40,13 +44,13 @@ def schema_sets(version):
     if version>=15:tables|=PORTAL_TABLES
     if version>=16:tables|=AI_TABLES;rls|=AI_TABLES
     if version>=17:tables|=COMMERCIAL_OPERATIONS_TABLES
-    for required,group in ((18,SALES_FOUNDATION_TABLES),(19,RESOURCE_POOL_TABLES),(20,CUSTOMER_COLLABORATION_TABLES),(21,OPPORTUNITY_LINE_TABLES),(22,SALES_ORDER_TABLES)):
+    for required,group in ((18,SALES_FOUNDATION_TABLES),(19,RESOURCE_POOL_TABLES),(20,CUSTOMER_COLLABORATION_TABLES),(21,OPPORTUNITY_LINE_TABLES),(22,SALES_ORDER_TABLES),(23,P6_FINANCE_TABLES),(24,P6_SERVICE_TABLES),(25,P6_PERFORMANCE_TABLES)):
         if version>=required:tables|=group;rls|=group
     return tables,rls
 
 def validate_schema(info):
     versions=[str(row[0]) for row in info['migrations']]
-    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,23)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
+    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,26)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
     version=int(versions[-1]);tables,rls=schema_sets(version)
     if set(info['counts'])!=tables:raise RuntimeError('UNEXPECTED_BACKUP_TABLE_SET')
     if {row[0] for row in info['rls']}!=rls or not all(row[1] and row[2] and row[3]=='crm_migrator' for row in info['rls']):raise RuntimeError('RESTORE_RLS_MISMATCH')

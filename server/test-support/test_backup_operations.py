@@ -109,12 +109,12 @@ class SchemaTests(unittest.TestCase):
     def fixture(self,version):
         tables,rls=backup.schema_sets(version)
         return {'counts':{name:0 for name in tables},'migrations':[(str(i),True) for i in range(1,version+1)],'rls':[(name,True,True,'crm_migrator') for name in sorted(rls)]}
-    def test_v5_through_v22_exact_schema_sets_are_supported(self):
-        for version in range(5,23):self.assertEqual(backup.validate_schema(self.fixture(version)),version)
+    def test_v5_through_v25_exact_schema_sets_are_supported(self):
+        for version in range(5,26):self.assertEqual(backup.validate_schema(self.fixture(version)),version)
     def test_future_missing_unprotected_and_wrong_owner_are_rejected(self):
         for scenario in ('future','missing','extra','unforced','owner'):
-            info=self.fixture(22)
-            if scenario=='future':info['migrations'].append(('23',True))
+            info=self.fixture(25)
+            if scenario=='future':info['migrations'].append(('26',True))
             if scenario=='missing':del info['counts']['crm_quote']
             if scenario=='extra':info['counts']['unexpected_customer_data']=1
             if scenario=='unforced':info['rls'][0]=(info['rls'][0][0],True,False,'crm_migrator')

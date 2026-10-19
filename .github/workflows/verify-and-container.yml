@@ -17,6 +17,16 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: acceptance-only-root-no-real-data
+          POSTGRES_DB: crm_acceptance
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d crm_acceptance"
+          --health-interval 5s --health-timeout 5s --health-retries 20
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -35,6 +45,55 @@ jobs:
         env:
           VITE_RUNTIME_MODE: live
       - run: mvn -f server/pom.xml -B -ntp verify
+      - name: Prepare disposable P6 database roles
+        env:
+          PGPASSWORD: acceptance-only-root-no-real-data
+        run: |
+          psql -h 127.0.0.1 -U postgres -d crm_acceptance -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE crm_runtime LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD 'acceptance-only-runtime';
+          CREATE ROLE crm_migrator LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD 'acceptance-only-migrator';
+          REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+          GRANT USAGE,CREATE ON SCHEMA public TO crm_migrator;
+          GRANT USAGE ON SCHEMA public TO crm_runtime;
+          SQL
+      - name: Start isolated API with synthetic data
+        env:
+          CRM_DB_URL: jdbc:postgresql://127.0.0.1:5432/crm_acceptance?sslmode=disable
+          CRM_DB_PASSWORD: acceptance-only-runtime
+          CRM_MIGRATION_DB_PASSWORD: acceptance-only-migrator
+          CRM_SEED_ENABLED: 'true'
+          CRM_SEED_PASSWORD: acceptance-only-account-2026
+          CRM_COOKIE_SECURE: 'false'
+          CRM_STAGE: test
+        run: |
+          java -jar server/target/crm-server-0.19.0.jar > /tmp/crm-p6-api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          tail -100 /tmp/crm-p6-api.log
+          exit 1
+      - name: Prepare independent reviewer fixture
+        env:
+          PGPASSWORD: acceptance-only-root-no-real-data
+        run: |
+          psql -h 127.0.0.1 -U postgres -d crm_acceptance -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO sys_member_role(tenant_id,member_id,role_code) VALUES('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000202','SALES_MANAGER');
+          SQL
+      - name: Verify complete P6 business workflows and boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p6-acceptance.json
+        run: python3 server/test-support/verify_p6_api.py
+      - name: P6 API diagnostic log
+        if: failure()
+        run: tail -120 /tmp/crm-p6-api.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p6-acceptance
+          path: p6-acceptance.json
       - run: sudo apt-get update && sudo apt-get install -y python3-boto3 python3-psycopg2 python3-cryptography
       - run: python3 -m unittest discover -s server/test-support -p test_backup_operations.py
       - uses: docker/setup-buildx-action@v4
