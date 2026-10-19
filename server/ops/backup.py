@@ -26,6 +26,11 @@ CONFIG_RLS=CONFIG_TABLES-{'sys_industry_template'}
 PORTAL_TABLES=set('portal_account portal_session portal_login_limit portal_audit portal_idempotency'.split())
 AI_TABLES=set('crm_ai_run crm_ai_feedback'.split())
 COMMERCIAL_OPERATIONS_TABLES=set('sys_subscription_order sys_usage_monthly'.split())
+SALES_FOUNDATION_TABLES=set('crm_sales_resource_policy crm_resource_alert'.split())
+RESOURCE_POOL_TABLES=set('crm_resource_movement'.split())
+CUSTOMER_COLLABORATION_TABLES=set('crm_customer_lifecycle_history crm_followup'.split())
+OPPORTUNITY_LINE_TABLES=set('crm_opportunity_line'.split())
+SALES_ORDER_TABLES=set('crm_sales_order_counter crm_sales_order crm_sales_order_line crm_sales_order_event'.split())
 
 def schema_sets(version):
     tables=set(BASE_TABLES);rls=set(BASE_RLS)
@@ -35,11 +40,13 @@ def schema_sets(version):
     if version>=15:tables|=PORTAL_TABLES
     if version>=16:tables|=AI_TABLES;rls|=AI_TABLES
     if version>=17:tables|=COMMERCIAL_OPERATIONS_TABLES
+    for required,group in ((18,SALES_FOUNDATION_TABLES),(19,RESOURCE_POOL_TABLES),(20,CUSTOMER_COLLABORATION_TABLES),(21,OPPORTUNITY_LINE_TABLES),(22,SALES_ORDER_TABLES)):
+        if version>=required:tables|=group;rls|=group
     return tables,rls
 
 def validate_schema(info):
     versions=[str(row[0]) for row in info['migrations']]
-    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,18)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
+    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,23)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
     version=int(versions[-1]);tables,rls=schema_sets(version)
     if set(info['counts'])!=tables:raise RuntimeError('UNEXPECTED_BACKUP_TABLE_SET')
     if {row[0] for row in info['rls']}!=rls or not all(row[1] and row[2] and row[3]=='crm_migrator' for row in info['rls']):raise RuntimeError('RESTORE_RLS_MISMATCH')
@@ -136,7 +143,7 @@ def table_counts(conn):
         cur.execute("SELECT version,success FROM flyway_schema_history ORDER BY installed_rank");migrations=cur.fetchall()
         cur.execute("SELECT relname,relrowsecurity,relforcerowsecurity,pg_get_userbyid(relowner) FROM pg_class WHERE relnamespace='public'::regnamespace AND relrowsecurity ORDER BY relname");rls=cur.fetchall()
     commercial={}
-    verified_tables=COMMERCE_TABLES|APPROVAL_TABLES|CONTRACT_TABLES|RECEIPT_TABLES|SERVICE_TABLES|KNOWLEDGE_TABLES|CAMPAIGN_TABLES|INTEGRATION_TABLES|CONFIG_TABLES|PORTAL_TABLES|AI_TABLES|COMMERCIAL_OPERATIONS_TABLES
+    verified_tables=COMMERCE_TABLES|APPROVAL_TABLES|CONTRACT_TABLES|RECEIPT_TABLES|SERVICE_TABLES|KNOWLEDGE_TABLES|CAMPAIGN_TABLES|INTEGRATION_TABLES|CONFIG_TABLES|PORTAL_TABLES|AI_TABLES|COMMERCIAL_OPERATIONS_TABLES|SALES_FOUNDATION_TABLES|RESOURCE_POOL_TABLES|CUSTOMER_COLLABORATION_TABLES|OPPORTUNITY_LINE_TABLES|SALES_ORDER_TABLES
     for name in sorted(verified_tables&set(tables)):
         sha=hashlib.sha256()
         with conn.cursor() as cur:
