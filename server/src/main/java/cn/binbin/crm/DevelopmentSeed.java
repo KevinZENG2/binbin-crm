@@ -48,6 +48,7 @@ public class DevelopmentSeed implements ApplicationRunner {
         });
     }
     private void member(NamedParameterJdbcTemplate db,int tenant,int member,int user,String name,String[] roles) {
+        db.queryForObject("SELECT set_config('crm.tenant_id',:tenant,true)",Map.of("tenant",id(tenant).toString()),String.class);
         String title=java.util.Arrays.asList(roles).contains("TENANT_ADMIN")?"企业管理员":java.util.Arrays.asList(roles).contains("SALES_MANAGER")?"销售经理":java.util.Arrays.asList(roles).contains("SALES")?"客户经理":"分析员";
         db.update("INSERT INTO sys_tenant_member(id,tenant_id,user_id,display_name,employee_code,job_title,sales_region,service_status) VALUES(:id,:tenant,:user,:name,:code,:title,:region,'AVAILABLE') ON CONFLICT DO NOTHING",Map.of("id",id(member),"tenant",id(tenant),"user",id(user),"name",name,"code","EMP-"+member,"title",title,"region",tenant==1?"华东区":"全国"));
         db.update("INSERT INTO crm_sales_resource_policy(id,tenant_id,member_id) VALUES(:id,:tenant,:member) ON CONFLICT DO NOTHING",Map.of("id",UUID.randomUUID(),"tenant",id(tenant),"member",id(member)));
