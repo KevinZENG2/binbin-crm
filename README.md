@@ -49,12 +49,12 @@ CRM_AI_MODEL=...
 
 - Vue 3 / TypeScript / Vite。
 - Java 21 / Spring Boot 3.5 / JDBC。
-- PostgreSQL 18，Flyway V1—V17；业务表使用独立迁移所有者与非 BYPASSRLS 运行账号。
+- PostgreSQL 18，Flyway V1—V22；业务表使用独立迁移所有者与非 BYPASSRLS 运行账号。
 - 企业业务表强制 RLS；平台控制面接口额外校验平台运营身份。
 - 密码 BCrypt、会话仅 HttpOnly Cookie、写请求 CSRF 与工作区一致性校验。
 - 外部客户门户使用独立 Cookie、会话、限流和审计，不接受内部 CRM 身份。
 - AI 外呼只允许由服务端环境变量配置的 HTTPS 地址；用户不能提交供应商 URL 或密钥。
-- 备份工具精确识别 V5—V17，并验证表集合、迁移、强制 RLS、内容摘要和一次性恢复。
+- 备份工具精确识别 V5—V22，并验证表集合、迁移、强制 RLS、内容摘要和一次性恢复。
 
 ## 本地验证
 
