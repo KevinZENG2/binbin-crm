@@ -32,6 +32,9 @@ class Client:
   if not valid:raise AssertionError(f'{method} {path}: expected {status}, got {code}: {result}')
   return result
 owner,alice,bob,viewer,admin,platform=[Client(x) for x in ('owner','alice','bob','viewer','tech-admin','platform-operator')];anon=Client()
+import xml.etree.ElementTree as ET
+expected_version=ET.parse(pathlib.Path(__file__).parents[1]/'pom.xml').getroot().find('{http://maven.apache.org/POM/4.0.0}version').text
+check('Health reports the packaged Maven version',anon.req('/health')['version']==expected_version)
 for path in ('/sales-orders','/finance/accounts','/finance/invoices','/performance/targets?year='+str(today.year),'/service/statistics?from='+str(month)+'&to='+str(today)):
  anon.req(path,status=401)
 check('All internal P6 endpoints require login')
