@@ -104,6 +104,7 @@ weekly=alice.req('/performance/weeklies/'+weekly['id']+'/submit','POST',{'expect
 weekly_body['expectedVersion']=weekly['version'];alice.req('/performance/weeklies/'+weekly['id'],'PUT',weekly_body,status=403)
 check('Structured weekly reports support submit, return, edit and approval without overwriting approved reports',weekly['status']=='APPROVED')
 # Service acceptance, dispatch, SLA pause/resume and one-time public feedback.
+check('Read-only members cannot be selected as service assignees',all(x['id']!=uid(203) for x in owner.req('/tickets/owners')))
 ticket=owner.req('/tickets','POST',{'title':'P6虚构客诉','description':'仅用于隔离验收','customerId':uid(301),'assigneeMemberId':uid(201),'priority':'NORMAL','slaPolicyId':None,'requesterName':'','requesterEmail':'','expectedVersion':0,'typeCode':'COMPLAINT'})
 owner.req('/tickets/'+ticket['id']+'/start','POST',{'expectedVersion':ticket['version'],'reason':'代接单'},status=403)
 ticket=alice.req('/tickets/'+ticket['id']+'/start','POST',{'expectedVersion':ticket['version'],'reason':'本人接单'})
