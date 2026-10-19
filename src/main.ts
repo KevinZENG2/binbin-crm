@@ -8,7 +8,7 @@ import './styles.css';
 import './live-theme.css';
 import './preview-theme.css';
 const query=new URLSearchParams(window.location.search),mode=query.get('mode'),portal=query.get('portal')==='1';
-const feedback=query.has('service-feedback');
+const feedback=query.has('service-feedback');if(feedback)document.documentElement.classList.add('crm-dark');
 const live=mode==='live'||(mode!=='demo'&&(import.meta.env.VITE_RUNTIME_MODE==='live'||window.location.hostname.endsWith('.up.railway.app')));
 document.documentElement.classList.toggle('crm-preview-dark',!live&&!portal);
 createApp(feedback?ServiceFeedback:portal?PortalWorkspace:live?BackendWorkspace:App).mount('#app');
