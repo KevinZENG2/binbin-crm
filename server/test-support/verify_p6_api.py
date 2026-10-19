@@ -110,6 +110,8 @@ check('Read-only members cannot be selected as service assignees',all(x['id']!=u
 ticket=owner.req('/tickets','POST',{'title':'P6虚构客诉','description':'仅用于隔离验收','customerId':uid(301),'assigneeMemberId':uid(201),'priority':'NORMAL','slaPolicyId':None,'requesterName':'','requesterEmail':'','expectedVersion':0,'typeCode':'COMPLAINT'})
 owner.req('/tickets/'+ticket['id']+'/start','POST',{'expectedVersion':ticket['version'],'reason':'代接单'},status=403)
 ticket=alice.req('/tickets/'+ticket['id']+'/start','POST',{'expectedVersion':ticket['version'],'reason':'本人接单'})
+alice.req('/tickets/'+ticket['id']+'/wait','POST',{'expectedVersion':ticket['version'],'reason':'未回复先等待'},status=409)
+ticket=alice.req('/tickets/'+ticket['id']+'/comments','POST',{'expectedVersion':ticket['version'],'body':'已受理，请补充问题资料','kind':'PUBLIC_REPLY'})
 ticket=alice.req('/tickets/'+ticket['id']+'/wait','POST',{'expectedVersion':ticket['version'],'reason':'等待客户补充资料'});check('Waiting on a customer pauses the configured SLA',ticket['slaState']=='PAUSED')
 ticket=alice.req('/tickets/'+ticket['id']+'/resume','POST',{'expectedVersion':ticket['version'],'reason':'资料已收到'})
 ticket=alice.req('/tickets/'+ticket['id']+'/comments','POST',{'expectedVersion':ticket['version'],'body':'问题已定位，提供解决方案','kind':'PUBLIC_REPLY'})
