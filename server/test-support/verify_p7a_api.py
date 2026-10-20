@@ -65,7 +65,7 @@ for p in panels.values():
   detail=owner.req('/analytics/'+p['id']+'/details?'+q+'&dimension=month&value='+bucket['month'][:7]);assert detail['total']==bucket['count']
 check('Monthly trend buckets use the same business-date definitions')
 raw=owner.req('/analytics/cash/export?'+q,raw=True);lines=list(csv.reader(io.StringIO(raw.decode('utf-8-sig'))))
-check('CSV exports all filtered cash rows in exact integer cents',len(lines)-1==panels['cash']['count'] and sum(int(x[7]) for x in lines[1:])==60000 and '回款冲销' in str(lines))
+check('CSV exports all filtered cash rows in exact integer cents',len(lines)-1==panels['cash']['count'] and sum(int(x[7].removeprefix("'")) for x in lines[1:])==60000 and '回款冲销' in str(lines))
 owner.req('/analytics?from=2024-01-01&to=2026-10-19',status=400);owner.req('/analytics?from=2026-10-20&to=2026-10-19',status=400)
 owner.req('/analytics/cash/details?'+q+'&dimension=arbitrary_sql',status=400);owner.req('/analytics/cash/details?'+q+'&page=0',status=400)
 check('Invalid dates, arbitrary dimensions and invalid pages are rejected')
