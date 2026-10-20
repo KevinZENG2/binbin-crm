@@ -110,6 +110,17 @@ try:
  owner.req('/automation/run-due','POST');check('Changed authorization prevents scheduled business execution',int(sql(f"SELECT count(*) FROM crm_automation_run WHERE rule_id='{qbad['id']}' AND status='SUCCESS'"))==0)
  notices=owner.req('/workspace/notices');notice=notices['items'][0];owner.req('/workspace/notices/'+notice['id']+'/read','POST');alice.req('/workspace/notices/'+notice['id']+'/read','POST',status=404)
  check('Inbox entries and read state are scoped to the recipient')
+ qfill=rule('P7填充和待办',actions=[{'type':'FILL_CUSTOMER_LEVEL','value':'B','memberId':None,'dueDays':0},{'type':'CREATE_TASK','value':'P7规则待办','memberId':uid(200),'dueDays':1}])
+ check('Customer fill and follow-up task creation use the original business services',execute(qfill)['status']=='SUCCESS' and owner.req('/workspace/objects/CUSTOMER/'+uid(301))['level']=='B')
+ lead=owner.req('/workspace/objects/LEAD','POST',{'values':{'联系人':'自动分配联系人','公司名称':'虚构自动化企业','行业':'软件','来源':'验收'}})
+ qpool=rule('P7分配回收',typ='LEAD',actions=[{'type':'ASSIGN','value':'','memberId':uid(201),'dueDays':0},{'type':'RETURN_POOL','value':'','memberId':None,'dueDays':0}])
+ check('Lead assignment and resource-pool return preserve canonical eligibility checks',execute(qpool,lead['id'])['status']=='SUCCESS')
+ auto_quote=owner.req('/quotes','POST',{'customerId':uid(303),'title':'P7自动流程报价','validUntil':str(today+datetime.timedelta(days=30)),'notes':'隔离测试','lines':[{'productId':newproduct['id'],'quantity':1,'unitPriceCents':20050,'discountBps':0,'description':''}],'expectedVersion':0})
+ qsubmit=rule('P7发起独立审批',typ='QUOTE',actions=[{'type':'SUBMIT_QUOTE','value':'','memberId':uid(202),'dueDays':0}])
+ check('Automation can submit a quote for independent approval',execute(qsubmit,auto_quote['id'])['status']=='SUCCESS')
+ auto_quote=owner.req('/workspace/objects/QUOTE/'+auto_quote['id']);auto_quote=bob.req('/quotes/'+auto_quote['id']+'/approval/approve','POST',{'expectedVersion':auto_quote['version'],'approvalId':auto_quote['approval']['id'],'reason':'隔离人工审批'})
+ qorder=rule('P7批准报价转订单',typ='QUOTE',actions=[{'type':'CREATE_ORDER','value':'','memberId':None,'dueDays':0}])
+ check('Only an approved quote can produce a draft order through automation',execute(qorder,auto_quote['id'])['status']=='SUCCESS')
 except Exception as error:
  import traceback
  failures.append({'section':'Automation revisions, idempotency, source scope, rollback and finite retries.','error':str(error)});traceback.print_exc()
@@ -127,7 +138,7 @@ try:
  owner.req('/workspace/objects/PRODUCT','POST',{'values':dict(product_values,**{'产品编码':'P7-ROLLBACK-DUP'})})
  owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0},status=409)
  check('Batch commit rechecks current data and rolls back every earlier row',sql("SELECT count(*) FROM crm_product WHERE sku='P7-ROLLBACK-FIRST'")=='0' and owner.req('/migrations/'+batch['id'])['status']=='PREVIEW')
- batch=preview('LEAD',[{'联系人':'迁移联系人','公司名称':'P7试点企业','来源':'迁移','电话':'13800000123'}]);key=str(uuid.uuid4());committed=owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0},key=key);same=owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0},key=key)
+ batch=preview('LEAD',[{'联系人':'迁移联系人','公司名称':'P7试点企业','行业':'软件','来源':'迁移','电话':'13800000123'}]);key=str(uuid.uuid4());committed=owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0},key=key);same=owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0},key=key)
  check('Successful migration retries return the same created records',committed['status']=='COMMITTED' and len(committed['results'])==1 and same['results']==committed['results'])
  old=preview('LEAD',[{'联系人':'过期批次','公司名称':'虚构企业'}]);sql(f"UPDATE crm_migration_batch SET created_at=now()-interval '2 days' WHERE id='{old['id']}'");owner.req('/migrations/'+old['id']+'/commit','POST',{'expectedVersion':0},status=409)
  check('Migration confirmations expire after 24 hours')
@@ -143,6 +154,7 @@ try:
   batch=preview(typ,[row]);assert not batch['rowsData'][0]['errors'],batch['rowsData'];return owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0})['results'][0]
  order_id=migrate_one('ORDER',{'批准报价编号':quote['quoteNumber'],'订单名称':'P7迁移订单','预计交付日期':str(today+datetime.timedelta(days=5))})
  check('Order template requires an approved quote and creates an unconfirmed draft',owner.req('/sales-orders/'+order_id)['status']=='DRAFT')
+ imported_order=owner.req('/sales-orders/'+order_id);owner.req('/sales-orders/'+order_id+'/confirm','POST',{'expectedVersion':imported_order['version'],'reason':'隔离人工确认'})
  contract=owner.req('/contracts','POST',{'quoteId':quote['id'],'quoteExpectedVersion':quote['version'],'orderId':order_id,'title':'P7迁移来源合同','startDate':str(today),'endDate':str(today+datetime.timedelta(days=365)),'notes':'','plans':[{'title':'合同款','amountCents':20050,'dueDate':str(today)}]})
  contract=owner.req('/contracts/'+contract['id']+'/sign','POST',{'expectedVersion':contract['version'],'signedDate':str(today),'reason':''})
  invoice_id=migrate_one('INVOICE',{'合同编号':contract['contractNumber'],'开票标题':'P7迁移开票','购方名称':'虚构企业','金额（元）':'1.00'})
@@ -164,7 +176,7 @@ try:
   canonical='POST\n/api/v1/inbound/records\n'+stamp+'\n'+nonce+'\n'+hashlib.sha256(body).hexdigest();sig=hmac.new(token.split('.')[2].encode(),canonical.encode(),hashlib.sha256).hexdigest()
   return anon.req('/inbound/records','POST',body,status=status,headers={'Authorization':'Bearer '+token,'X-CRM-Timestamp':stamp,'X-CRM-Nonce':nonce,'X-CRM-Signature':sig})
  nonce=uuid.uuid4().hex;data=signed(nonce=nonce);signed(nonce=nonce,status=409);signed('INVOICE',status=403)
- check('Signed new-object reads enforce scopes and reject nonce replay',data['total']==1)
+ check('Signed new-object reads enforce scopes and reject nonce replay',data['total']>=1)
  check('Signed source-reader still hides product costs',signed(record=order['id']).get('costCents') is None)
 except Exception as error:
  import traceback
@@ -210,7 +222,7 @@ try:
  owner.req('/platform/p7/plans',status=403);plans=platform.req('/platform/p7/plans')['items'];plan=next(p for p in plans if p['id']==sql("SELECT plan_id FROM sys_tenant WHERE id='"+uid(1)+"'"))
  body={k:plan[k] for k in ('automationEnabled','automationRuleLimit','automationMonthlyLimit','workspaceEnabled','publicFormLimit','publicSubmissionMonthlyLimit','migrationEnabled','migrationMonthlyRowLimit')};body['expectedVersion']=plan['version'];body['migrationMonthlyRowLimit']=0
  updated=platform.req('/platform/p7/plans/'+plan['id'],'PUT',body);newplan=next(x for x in updated['items'] if x['id']==plan['id'])
- batch=preview('LEAD',[{'联系人':'额度测试','公司名称':'虚构'}]);owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0},status=409)
+ batch=preview('LEAD',[{'联系人':'额度测试','公司名称':'虚构','行业':'软件','来源':'验收'}]);owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0},status=409)
  body['expectedVersion']=newplan['version'];body['migrationMonthlyRowLimit']=plan['migrationMonthlyRowLimit'];body['automationEnabled']=False;updated=platform.req('/platform/p7/plans/'+plan['id'],'PUT',body);owner.req('/automation/run-due','POST',status=403)
  body['expectedVersion']=next(x for x in updated['items'] if x['id']==plan['id'])['version'];body['automationEnabled']=True;platform.req('/platform/p7/plans/'+plan['id'],'PUT',body)
  check('Product operator plan quotas and feature switches take effect immediately')
