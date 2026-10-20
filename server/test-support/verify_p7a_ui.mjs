@@ -7,6 +7,7 @@ const browser=await chromium.launch({headless:true});const page=await browser.ne
 const out=process.env.CRM_UI_RESULT_DIR||'p7a-ui';await mkdir(out,{recursive:true});const checks=[];
 try{
  await page.goto(base+'/?account=owner');await page.getByLabel('账号',{exact:true}).fill('owner');await page.getByLabel('密码',{exact:true}).fill(process.env.CRM_TEST_PASSWORD);await page.getByRole('button',{name:'登录工作区',exact:true}).click();
+ await page.getByLabel('当前企业',{exact:true}).selectOption('00000000-0000-4000-8000-000000000001');
  await page.getByRole('navigation',{name:'工作区导航'}).getByRole('button',{name:'经营指挥台',exact:true}).click();await page.locator('.analytics-kpis').waitFor();
  await page.getByRole('button',{name:'本季度',exact:true}).click();await page.locator('.analytics-kpis').waitFor();checks.push('Login and left navigation open real analytics with a quarterly filter');
  await page.screenshot({path:out+'/desktop.png',fullPage:true});
@@ -20,4 +21,4 @@ try{
  await page.locator('.analytics-panel').first().getByRole('button',{name:'查看明细'}).click();await page.getByRole('dialog').waitFor();await page.locator('[role=dialog]').getByText('正在加载明细…').waitFor({state:'hidden'});
  rect=await page.getByRole('dialog').boundingBox();assert.ok(rect&&rect.x>=0&&rect.y>=0&&rect.x+rect.width<=391&&rect.y+rect.height<=845);await page.screenshot({path:out+'/mobile-drilldown.png',fullPage:true});checks.push('Mobile analytics and drilldown fit the viewport with internal table scrolling');
  assert.deepEqual(errors,[]);checks.push('No browser runtime exceptions');await writeFile(out+'/result.json',JSON.stringify({stage:'P7-A UI',passed:checks.length,checks},null,2)+'\n');console.log(checks.join('\n'));
-}finally{await browser.close();}
+}catch(error){await page.screenshot({path:out+'/failure.png',fullPage:true});await writeFile(out+'/failure.html',await page.content());throw error;}finally{await browser.close();}
