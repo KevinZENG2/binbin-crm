@@ -65,6 +65,7 @@ jobs:
           CRM_SEED_PASSWORD: acceptance-only-account-2026
           CRM_COOKIE_SECURE: 'false'
           CRM_STAGE: test
+          CRM_INTEGRATION_ENCRYPTION_KEY: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'
         run: |
           java -jar server/target/crm-server-0.21.0.jar --spring.web.resources.static-locations=file:"$PWD"/dist/ > /tmp/crm-p6-api.log 2>&1 &
           crm_p6_api_pid=$!
@@ -99,6 +100,17 @@ jobs:
         with:
           name: p7a-acceptance
           path: p7a-acceptance.json
+      - name: Verify P7 automation, workspace, migration and pilot boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p7-acceptance.json
+        run: python3 server/test-support/verify_p7_api.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-acceptance
+          path: p7-acceptance.json
       - name: Install isolated browser test tools
         run: |
           npm install --prefix /tmp/crm-p7-ui --no-audit --no-fund playwright@1.56.1

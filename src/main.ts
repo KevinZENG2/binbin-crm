@@ -3,6 +3,7 @@ import App from './App.vue';
 import BackendWorkspace from './BackendWorkspace.vue';
 import PortalWorkspace from './PortalWorkspace.vue';
 import ServiceFeedback from './ServiceFeedback.vue';
+import PublicIntake from './PublicIntake.vue';
 import './p6.css';
 import './styles.css';
 import './live-theme.css';
@@ -11,4 +12,5 @@ const query=new URLSearchParams(window.location.search),mode=query.get('mode'),p
 const feedback=query.has('service-feedback');if(feedback)document.documentElement.classList.add('crm-dark');
 const live=mode==='live'||(mode!=='demo'&&(import.meta.env.VITE_RUNTIME_MODE==='live'||window.location.hostname.endsWith('.up.railway.app')));
 document.documentElement.classList.toggle('crm-preview-dark',!live&&!portal);
-createApp(feedback?ServiceFeedback:portal?PortalWorkspace:live?BackendWorkspace:App).mount('#app');
+if(query.has('intake'))document.documentElement.classList.add('crm-dark');
+createApp(query.has('intake')?PublicIntake:feedback?ServiceFeedback:portal?PortalWorkspace:live?BackendWorkspace:App).mount('#app');
