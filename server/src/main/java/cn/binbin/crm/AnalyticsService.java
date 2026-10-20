@@ -20,7 +20,8 @@ public class AnalyticsService {
     private final TradeService t;
     private final CommerceService commerce;
     private final P3Base p3;
-    public AnalyticsService(DeliveryGuard guard, TradeService t, CommerceService commerce, P3Base p3) {this.guard=guard;this.t=t;this.commerce=commerce;this.p3=p3;}
+    private final P7Permissions p7;
+    public AnalyticsService(DeliveryGuard guard, TradeService t, CommerceService commerce, P3Base p3,P7Permissions p7) {this.guard=guard;this.t=t;this.commerce=commerce;this.p3=p3;this.p7=p7;}
     private Map<String,Object> params(AuthService.Actor a, Filter f) {
         var p=t.params(a);p.putAll(commerce.params(a));p.putAll(p3.params(a));
         p.putAll(P3Base.map("fromDate",f.from(),"toDate",f.to(),"ownerFilter",f.owner(),"departmentFilter",f.department(),"regionFilter",f.region(),"industryFilter",f.industry()));return p;
@@ -32,7 +33,7 @@ public class AnalyticsService {
         if(c&&a.commerceAccess().quotes().read())m.put("quotes","报价分析");
         if(k){m.put("orders","确认订单");if(a.commerceAccess().productRead())m.put("products","产品销售");}
         if(k&&a.tradeAccess().receiptRead()){m.put("cash","净回款");m.put("rfm","客户 RFM");}
-        if(a.p3Access().tickets().read())m.put("service","售后分析");if(k)m.put("commissions","激励分析");return m;
+        if(a.p3Access().tickets().read())m.put("service","售后分析");if(k)m.put("commissions","激励分析");m.entrySet().removeIf(e->!p7.permits(a,switch(e.getKey()){case "customers","rfm"->"CUSTOMER";case "opportunities","wins"->"OPPORTUNITY";case "quotes"->"QUOTE";case "orders","products"->"ORDER";case "cash"->"RECEIPT";case "service"->"TICKET";case "commissions"->"COMMISSION";default->"LEAD";},false));return m;
     }
     private boolean cost(AuthService.Actor a,String module){return a.commerceAccess().productWrite()&&Set.of("orders","products").contains(module);}
     private boolean exportable(AuthService.Actor a,String module){return a.deliveryAccess().export()&&(!Set.of("orders","products","cash","rfm","commissions").contains(module)||a.tradeAccess().export())&&(!module.equals("service")||a.p3Access().export());}
