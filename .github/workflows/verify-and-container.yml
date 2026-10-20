@@ -126,6 +126,17 @@ jobs:
         with:
           name: p7a-ui
           path: p7a-ui/
+      - name: Verify P7 workspace desktop, mobile and anonymous form interactions
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_PLAYWRIGHT_MODULE: /tmp/crm-p7-ui/node_modules/playwright
+        run: node server/test-support/verify_p7_ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-ui
+          path: p7-ui/
       - name: P6 API diagnostic log
         if: failure()
         run: tail -120 /tmp/crm-p6-api.log || true
