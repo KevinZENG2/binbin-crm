@@ -66,7 +66,7 @@ jobs:
           CRM_COOKIE_SECURE: 'false'
           CRM_STAGE: test
         run: |
-          java -jar server/target/crm-server-0.19.0.jar > /tmp/crm-p6-api.log 2>&1 &
+          java -jar server/target/crm-server-0.20.0.jar --spring.web.resources.static-locations=file:"$PWD"/dist/ > /tmp/crm-p6-api.log 2>&1 &
           crm_p6_api_pid=$!
           for attempt in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:8080/api/v1/health > /dev/null; then exit 0; fi
@@ -88,6 +88,32 @@ jobs:
           CRM_TEST_PASSWORD: acceptance-only-account-2026
           CRM_ACCEPTANCE_RESULT: p6-acceptance.json
         run: python3 server/test-support/verify_p6_api.py
+      - name: Verify P7-A analytics and permission boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p7a-acceptance.json
+        run: python3 server/test-support/verify_p7a_api.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7a-acceptance
+          path: p7a-acceptance.json
+      - name: Install isolated browser test tools
+        run: |
+          npm install --prefix /tmp/crm-p7-ui --no-audit --no-fund playwright@1.56.1
+          /tmp/crm-p7-ui/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify P7-A desktop and mobile interactions
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_PLAYWRIGHT_MODULE: /tmp/crm-p7-ui/node_modules/playwright
+        run: node server/test-support/verify_p7a_ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7a-ui
+          path: p7a-ui/
       - name: P6 API diagnostic log
         if: failure()
         run: tail -120 /tmp/crm-p6-api.log || true
