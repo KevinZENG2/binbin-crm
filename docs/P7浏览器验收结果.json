@@ -1,0 +1,17 @@
+{
+  "stage": "P7 UI",
+  "passed": 11,
+  "checks": [
+    "Left navigation creates, publishes and executes a real automation rule",
+    "Automation execution attempts are available in the UI",
+    "Dark form controls retain readable text after dialog teleport",
+    "Extended fields save through the centered record dialog",
+    "Quick create writes a real product through original domain validation",
+    "CSV preview and explicit batch confirmation work end to end",
+    "Pilot checks expose outstanding work and archive a human note",
+    "Mobile workspace and record dialog stay within a 390px viewport",
+    "Anonymous mobile intake requires consent and acknowledges receipt without internal IDs",
+    "Product operator has a separate plan limits entry",
+    "No browser runtime exceptions"
+  ]
+}

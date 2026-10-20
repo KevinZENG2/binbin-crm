@@ -58,8 +58,8 @@
   "scope": "synthetic data only",
   "latencyMs": {
     "samples": 10,
-    "median": 10.16,
-    "max": 14.16,
+    "median": 13.11,
+    "max": 17.23,
     "note": "Single CI client, small synthetic dataset; not a production capacity benchmark"
   }
 }
