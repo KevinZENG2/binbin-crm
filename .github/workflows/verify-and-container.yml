@@ -137,6 +137,13 @@ jobs:
         with:
           name: p7-ui
           path: p7-ui/
+      - name: Package verified private release
+        run: python3 server/ops/package_release.py /tmp/crm-release.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p7-release
+          path: /tmp/crm-release.tgz
+          retention-days: 7
       - name: P6 API diagnostic log
         if: failure()
         run: tail -120 /tmp/crm-p6-api.log || true
