@@ -15,7 +15,7 @@ try{
  let rect=await page.getByRole('dialog').boundingBox();assert.ok(rect&&rect.x>=0&&rect.y>=0&&Math.abs(rect.x+rect.width/2-720)<5&&rect.y+rect.height<=1000);checks.push('Order drilldown contains real fixture and stays centered within desktop viewport');
  await page.screenshot({path:out+'/order-drilldown.png',fullPage:true});await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
  await page.getByRole('button',{name:'销售与产品',exact:true}).click();await page.locator('.analytics-panel').filter({has:page.getByRole('heading',{name:'产品销售',exact:true})}).getByRole('button').filter({hasText:'P6验收服务'}).click();
- await page.getByRole('dialog').waitFor();checks.push('Product chart supports keyboard-accessible drilldown');await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
+ await page.locator('[role=dialog] tbody tr').filter({hasText:'P6验收服务'}).waitFor();checks.push('Product chart supports keyboard-accessible drilldown');await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
  await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'客户经营',exact:true}).click();await page.screenshot({path:out+'/mobile.png',fullPage:true});
  assert.ok(await page.locator('.analytics-workspace').evaluate(el=>el.getBoundingClientRect().right<=window.innerWidth+2));
  await page.locator('.analytics-panel').first().getByRole('button',{name:'查看明细'}).click();await page.getByRole('dialog').waitFor();await page.locator('[role=dialog]').getByText('正在加载明细…').waitFor({state:'hidden'});
