@@ -122,6 +122,24 @@ batch=preview('LEAD',[{'联系人':'迁移联系人','公司名称':'P7试点企
 check('Successful migration retries return the same created records',committed['status']=='COMMITTED' and len(committed['results'])==1 and same['results']==committed['results'])
 old=preview('LEAD',[{'联系人':'过期批次','公司名称':'虚构企业'}]);sql(f"UPDATE crm_migration_batch SET created_at=now()-interval '2 days' WHERE id='{old['id']}'");owner.req('/migrations/'+old['id']+'/commit','POST',{'expectedVersion':0},status=409)
 check('Migration confirmations expire after 24 hours')
+# The remaining migration templates also create domain drafts, never approved finance.
+quote=owner.req('/quotes','POST',{'customerId':uid(303),'title':'P7迁移来源报价','validUntil':str(today+datetime.timedelta(days=30)),'notes':'隔离验收','lines':[{'productId':newproduct['id'],'quantity':1,'unitPriceCents':20050,'discountBps':0,'description':''}],'expectedVersion':0})
+quote=owner.req('/quotes/'+quote['id']+'/submit','POST',{'expectedVersion':quote['version'],'approverMemberId':uid(202),'reason':''})
+quote=bob.req('/quotes/'+quote['id']+'/approval/approve','POST',{'expectedVersion':quote['version'],'approvalId':quote['approval']['id'],'reason':'独立复核'})
+def migrate_one(typ,row):
+ batch=preview(typ,[row]);assert not batch['rowsData'][0]['errors'],batch['rowsData'];return owner.req('/migrations/'+batch['id']+'/commit','POST',{'expectedVersion':0})['results'][0]
+order_id=migrate_one('ORDER',{'批准报价编号':quote['quoteNumber'],'订单名称':'P7迁移订单','预计交付日期':str(today+datetime.timedelta(days=5))})
+check('Order template requires an approved quote and creates an unconfirmed draft',owner.req('/sales-orders/'+order_id)['status']=='DRAFT')
+contract=owner.req('/contracts','POST',{'quoteId':quote['id'],'quoteExpectedVersion':quote['version'],'orderId':order_id,'title':'P7迁移来源合同','startDate':str(today),'endDate':str(today+datetime.timedelta(days=365)),'notes':'','plans':[{'title':'合同款','amountCents':20050,'dueDate':str(today)}]})
+contract=owner.req('/contracts/'+contract['id']+'/sign','POST',{'expectedVersion':contract['version'],'signedDate':str(today),'reason':''})
+invoice_id=migrate_one('INVOICE',{'合同编号':contract['contractNumber'],'开票标题':'P7迁移开票','购方名称':'虚构企业','金额（元）':'1.00'})
+account=owner.req('/finance/accounts')['items'][0]
+expense_id=migrate_one('EXPENSE',{'资金账户':account['name'],'收款方':'虚构供应商','支出类别':'迁移验收','金额（元）':'1.00','付款日期':str(today),'付款流水号':'P7-EXPENSE-001'})
+check('Invoice and expense migrations cannot bypass approval or post cash entries',owner.req('/finance/invoices/'+invoice_id)['status']=='DRAFT' and owner.req('/finance/expenses')['items'][0]['status']=='DRAFT')
+future=(today.replace(day=1)+datetime.timedelta(days=35)).replace(day=1)
+target_id=migrate_one('TARGET',{'目标对象':'owner','月份':str(future)[:7],'周期月数':'1','目标金额（元）':'1000'})
+weekly_id=migrate_one('WEEKLY',{'周起始日':str(today-datetime.timedelta(days=today.weekday()+14)),'工作进展':'迁移周报','本周成果':'虚构验收','风险事项':'无','下周计划':'继续'})
+check('Target and weekly templates preserve canonical scope and draft state',target_id is not None and owner.req('/workspace/objects/WEEKLY/'+weekly_id)['status']=='DRAFT')
 # Signed API remains scoped, nonce protected, and source-authorized.
 k=owner.req('/integrations/keys','POST',{'name':'P7只读订单接口','ownerMemberId':uid(201),'scopes':['orders.read'],'expiresDays':1});token=k['oneTimeToken']
 def signed(typ='ORDER',record=None,nonce=None,status=200):
