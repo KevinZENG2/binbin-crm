@@ -3,3 +3,5 @@
 .p6 :is(h1,h2,h3,strong){color:#e6efff}.p6 :is(a,.text-button){color:#83e4dd}.p6 .btn.secondary{background:#1b2c48;border-color:#6d8ab14d;color:#d8e7fb}.p6 .btn.primary{background:linear-gradient(135deg,#6456d9,#1b9ba7);border-color:#7faff17a;color:#fff}.p6 small{color:var(--p6-muted)}
 
 .p6 label,.crm-dark .p6 label{color:#cbd9ed}
+
+html.crm-dark body .p6 :is(input:not([type=checkbox]),select,textarea){background:#16233d;color:#e8f1ff;border-color:#6983a76b;color-scheme:dark}
