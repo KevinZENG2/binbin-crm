@@ -18,7 +18,7 @@ public class DatabaseGuard implements ApplicationRunner {
         var withOrders=new java.util.HashSet<>(expected);withOrders.addAll(java.util.Set.of("crm_sales_order_counter","crm_sales_order","crm_sales_order_line","crm_sales_order_event"));
         withOrders.addAll(java.util.Set.of("crm_fund_account","crm_fund_entry","crm_invoice","crm_invoice_red","crm_expense","crm_finance_event","crm_service_feedback","crm_sales_target","crm_commission_rule","crm_commission_run","crm_commission_adjustment","crm_sales_weekly_report","crm_performance_event"));
         withOrders.addAll(java.util.Set.of("crm_automation_rule","crm_automation_revision","crm_automation_event","crm_automation_run","crm_automation_attempt","crm_object_policy","crm_workspace_attachment","crm_workspace_notice","crm_public_form","crm_public_submission","crm_migration_batch","crm_pilot_run"));
-        withOrders.addAll(java.util.Set.of("crm_ai_policy","crm_ai_usage"));
+        withOrders.addAll(java.util.Set.of("crm_ai_policy","crm_ai_usage","crm_ai_quality_policy","crm_ai_evaluation","crm_ai_proposal"));
         if(!new java.util.HashSet<>(safe).equals(withOrders))throw new IllegalStateException("All business tables must have forced RLS and separate migration ownership");
     }
 }

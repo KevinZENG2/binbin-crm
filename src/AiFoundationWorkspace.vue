@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import P8QualityWorkspace from './P8QualityWorkspace.vue';
 import {onMounted,reactive,ref} from 'vue';
 type Request=(path:string,method?:string,body?:unknown,headers?:Record<string,string>)=>Promise<any>;
 const props=defineProps<{platform?:boolean;request:Request;readonly:boolean}>();
@@ -30,8 +31,9 @@ onMounted(()=>run(load));
   <template v-else>
    <div class="cards"><article class="card"><span>本月 Token</span><strong>{{data.usage.usedTokens||0}}</strong><small>预留 {{data.usage.reservedTokens||0}} · 按 UTC 自然月结算</small></article><article class="card"><span>本月参考费用</span><strong>{{money(data.usage.estimatedCostCents)}}</strong><small>预留 {{money(data.usage.reservedCostCents)}} · 人民币估算</small></article><article class="card"><span>连接状态</span><strong>{{data.masterEnabled?'总开关开启':'总开关关闭'}}</strong><small>{{data.models.length}} 个可选模型</small></article></div>
    <form class="card form" @submit.prevent="savePolicy"><h2>企业使用策略</h2><label class="check"><input v-model="policy.enabled" type="checkbox" :disabled="readonly||busy"/>启用本企业 AI</label><div class="fields"><label>模型<select v-model="policy.modelId" :disabled="readonly||busy"><option value="">请选择模型</option><option v-for="m in data.models" :key="m.id" :value="m.id">{{m.provider}} / {{m.model}}{{m.keyConfigured?'':' · 连接待配置'}}</option></select></label><label>每月 Token 预算<input v-model.number="policy.monthlyTokenLimit" type="number" min="0" :max="data.plan.aiMonthlyTokenLimit||100000000" :disabled="readonly||busy"/><small>套餐上限 {{data.plan.aiMonthlyTokenLimit||0}}</small></label><label>每月参考费用预算（元）<input v-model="budgetYuan" inputmode="decimal" :disabled="readonly||busy"/><small>套餐上限 {{money(data.plan.aiMonthlyBudgetCents)}}</small></label><label>输入字符上限<input v-model.number="policy.maxInputChars" type="number" min="1000" max="20000" :disabled="readonly||busy"/></label><label>单次输出 Token 上限<input v-model.number="policy.maxOutputTokens" type="number" min="128" max="8192" :disabled="readonly||busy"/></label><label>每分钟请求上限<input v-model.number="policy.requestsPerMinute" type="number" min="1" max="60" :disabled="readonly||busy"/></label></div><p class="hint">新企业默认关闭。用量在发送前原子预留；明确失败退回预留，超时或无法确认的供应商结果按预留值保守计入预算，不自动重试。预算为参考费用控制，实际金额以供应商账单为准。</p><button class="btn primary" :disabled="busy||readonly">保存企业 AI 设置</button></form>
-   <section class="card form"><h2>发送与操作边界</h2><p>每次生成前展示实际脱敏内容、供应商及模型，确认在 5 分钟内有效且仅供同一次请求使用。资料、模型或企业策略变化后需要重新预览。</p><p>AI 仅生成摘要、建议和回复草稿。保存跟进、创建线索、审批、确认到账等操作继续由有权限的成员在业务模块办理。</p></section>
+   <section class="card form"><h2>发送与操作边界</h2><p>每次生成前展示实际脱敏内容、供应商及模型，确认在 5 分钟内有效且仅供同一次请求使用。资料、模型或企业策略变化后需要重新预览。</p><p>AI 生成建议与草稿；线索和跟进需编辑并二次确认后保存。审批、合同、收款继续由有权限的成员在原业务模块办理。</p></section>
   </template>
+ <P8QualityWorkspace :platform="platform" :request="request" :readonly="readonly"/>
  </section>
 </template>
 <style scoped>
