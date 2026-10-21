@@ -63,7 +63,11 @@ try:
  owner.req('/ai/preview','POST',{'taskType':'NEW_LEAD','recordId':uid(201),'dataApproved':True},status=404)
  viewer.req('/ai/tasks/NEW_LEAD/sources',status=403)
  check('Forged member workspace IDs and viewer access are rejected')
- for task in ('CUSTOMER_SUMMARY','OPPORTUNITY_COACH','TICKET_REPLY','CAMPAIGN_ADVICE','LEAD_ASSESSMENT','VISIT_PREP','FOLLOWUP_DRAFT','WEEKLY_SUMMARY','ANOMALY_EXPLAIN'):
+ # Create scenario fixtures through canonical APIs instead of depending on unrelated suites.
+ due=str(datetime.date.today()+datetime.timedelta(days=7))
+ owner.req('/opportunities','POST',{'customerId':uid(301),'sourceLeadId':None,'title':'P8场景商机验收','ownerMemberId':uid(200),'amountCents':10000,'closeDate':due,'nextAction':'核实需求','description':'隔离素材'})
+ owner.req('/campaigns','POST',{'name':'P8活动建议验收','description':'隔离素材','ownerMemberId':uid(200),'channel':'FOLLOW_UP','sourceChannel':'EVENT','budgetCents':10000,'plannedStart':str(datetime.date.today()),'plannedEnd':due,'subject':'需求核实','body':'仅供隔离测试，不对外发送','taskDueDate':due,'expectedVersion':0})
+ for task in ('CUSTOMER_SUMMARY','OPPORTUNITY_COACH','TICKET_REPLY','TICKET_TRIAGE','CAMPAIGN_ADVICE','LEAD_ASSESSMENT','VISIT_PREP','FOLLOWUP_DRAFT','WEEKLY_SUMMARY','ANOMALY_EXPLAIN'):
   rows=owner.req('/ai/tasks/'+task+'/sources')['items']
   if not rows:raise AssertionError('Missing canonical fixture for '+task)
   result=generate(task,rows[0]['id'],'P8_CLEAN')
