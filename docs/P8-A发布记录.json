@@ -1,0 +1,19 @@
+{
+  "version": "0.22.0",
+  "schema": 29,
+  "codeCommit": "de18f4d7dcd3e08f72cd6244ce3c2efcf54a2ca1",
+  "workflowRun": 39594818425,
+  "artifactId": 12343317112,
+  "artifactExpiresAt": "2026-10-28T11:51:27Z",
+  "archiveBytes": 494787,
+  "archiveSha256": "30e30e68a74ea201056aba07b3a7c1ab4bdbd95c221399e95d8c298e8a018969",
+  "objectKey": "system/releases/crm/0.22.0/30e30e68a74ea201056aba07b3a7c1ab4bdbd95c221399e95d8c298e8a018969.tgz",
+  "uploadedToPrivateStorage": false,
+  "cloudDeploymentCompleted": false,
+  "reason": "Railway control plane outage; live application remains 0.21.0 and schema V28",
+  "realSupplierCallVerified": false,
+  "defaultProvider": "DEEPSEEK",
+  "workflowConclusion": "success",
+  "uiChecks": 5,
+  "apiChecks": 26
+}
