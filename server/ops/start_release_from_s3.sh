@@ -40,5 +40,6 @@ else
 fi
 tar -xzf release.tgz
 touch dist/index.html
+# SQL files are in the checksum-verified release; use an explicit path for Flyway.
 mvn -f server/pom.xml -B -ntp verify
-exec java -Xmx512m -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=64m -jar server/target/crm-server-0.21.0.jar --spring.web.resources.static-locations=file:/opt/crm/dist/
+exec java -Xmx512m -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=64m -jar server/target/crm-server-0.21.0.jar --spring.web.resources.static-locations=file:/opt/crm/dist/ --spring.flyway.locations=filesystem:/opt/crm/server/src/main/resources/db/migration
