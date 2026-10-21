@@ -10,6 +10,7 @@ class Handler(BaseHTTPRequestHandler):
   with lock:self.answer(200,{'calls':list(calls)})
  def do_POST(self):
   body=json.loads(self.rfile.read(int(self.headers['Content-Length'])));prompt=body['messages'][-1]['content']
+  assert body['thinking']=={'type':'disabled'} and 'max_tokens' in body and 'max_completion_tokens' not in body
   assert self.headers.get('Authorization')=='Bearer crm-acceptance-only'
   with lock:calls.append(body)
   if 'SLOW' in prompt:time.sleep(0.6)

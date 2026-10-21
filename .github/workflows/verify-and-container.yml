@@ -67,7 +67,7 @@ jobs:
           CRM_STAGE: test
           SPRING_PROFILES_ACTIVE: acceptance
           CRM_AI_ENABLED: 'true'
-          CRM_AI_OPENAI_API_KEY: crm-acceptance-only
+          CRM_AI_DEEPSEEK_API_KEY: crm-acceptance-only
           CRM_INTEGRATION_ENCRYPTION_KEY: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'
         run: |
           python3 server/test-support/ai_provider_stub.py > /tmp/crm-ai-stub.log 2>&1 &

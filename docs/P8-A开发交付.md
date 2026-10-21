@@ -10,7 +10,7 @@
 
 ## 已实现
 
-供应商适配包括 OpenAI、DeepSeek、通义千问的聊天补全协议。密钥只由产品方配置在服务器，不保存在模型表，不返回客户端。没有默认付费模型，不自动试调用。
+按产品负责人确认，默认供应商选择 DeepSeek；保留 OpenAI、通义千问适配。DeepSeek 先采用非思考模式生成业务草稿，避免有限输出预算被推理过程耗尽。密钥只由产品方配置在服务器，不保存在模型表，不返回客户端。没有默认付费模型，不自动试调用。
 
 每次预览的确认在五分钟内有效，仅绑定当前成员、业务上下文、模型和企业策略的版本。修改资料或配置后重新预览。同一请求编号重复提交返回同一记录，并发提交不会重复发送。反馈与历史结果跟随当前记录可见权限，跨企业禁止访问。
 
@@ -29,6 +29,12 @@ OpenAI、DeepSeek 使用固定官方地址。千问默认中国大陆 DashScope 
 隔离 CI 仅当 `acceptance` 配置与固定的非秘密测试凭据同时存在，才路由到本机合成供应商；正式环境不配置这两项。真实供应商密钥尚未提供，真实调用和账单核对不作为已完成事项。
 
 协议依据：[OpenAI](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)、[DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion/)、[千问](https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions)。价格由平台人工录入，本轮不内置易过期报价。
+
+## DeepSeek 接入约定
+
+产品方后续在服务器配置 `CRM_AI_DEEPSEEK_API_KEY`；平台「AI 模型与预算」默认选择 DeepSeek。接口为官方 `https://api.deepseek.com/chat/completions`，以 Bearer 认证发送 `messages`、`max_tokens`、`thinking.type=disabled` 和 `stream=false`。模型标识由平台配置，不写死在业务代码中，接入时依供应商账号可用模型填写。
+
+本轮不需要真实 Key；没有 Key 时默认关闭，不产生真实调用费用。Token 统计、参考预算、发送前人工确认、脱敏和审计统一使用现有底座。P8-A 的隔离完整调用测试按 DeepSeek 协议执行，不代表已通过真实供应商联网验收。
 
 ## 后续
 

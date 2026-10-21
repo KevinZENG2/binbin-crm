@@ -50,7 +50,7 @@ try:
  default=owner.req('/ai/settings');check('AI starts disabled with no hidden model or secret',not default['policy']['enabled'] and not default['models'] and 'acceptance-only' not in json.dumps(default))
  body,preview=prepare();blocked=owner.req('/ai/runs','POST',body)
  check('Unconfigured AI records BLOCKED without outbound calls or budget charges',blocked['status']=='BLOCKED' and not calls() and owner.req('/ai/settings')['usage']['usedTokens']==0)
- model={'provider':'OPENAI','model':'crm-isolated-model','inputPriceCentsPerMillion':100000,'outputPriceCentsPerMillion':200000,'maxOutputTokens':512,'active':True,'expectedVersion':0}
+ model={'provider':'DEEPSEEK','model':'crm-isolated-model','inputPriceCentsPerMillion':100000,'outputPriceCentsPerMillion':200000,'maxOutputTokens':512,'active':True,'expectedVersion':0}
  platform.req('/platform/ai/models','POST',dict(model,inputPriceCentsPerMillion=0),status=400)
  created=platform.req('/platform/ai/models','POST',model);model_id=created['id']
  platform.req('/platform/ai/models','POST',model,status=409)

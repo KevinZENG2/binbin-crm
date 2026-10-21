@@ -1,6 +1,5 @@
 #!/bin/sh
-# Only the first deployment needs a short-lived GitHub artifact download URL.
-# Every subsequent start reads the verified private object, using existing S3 credentials.
+# Read the verified private release using existing S3 credentials.
 set -eu
 umask 077
 : "${CRM_P7_RELEASE_SHA256:?Release checksum required}"
@@ -24,20 +23,8 @@ s3_request() {
  curl --retry 3 --connect-timeout 10 --max-time 90 -fsS --aws-sigv4 "aws:amz:${CRM_S3_REGION:-auto}:s3" --user "$CRM_S3_ACCESS_KEY:$CRM_S3_SECRET_KEY" "$@"
 }
 verify_release() { printf '%s  release.tgz\n' "$CRM_P7_RELEASE_SHA256" | sha256sum -c -; }
-if s3_request "$s3_url" -o release.tgz; then
- verify_release
-else
- : "${CRM_P7_BOOTSTRAP_URL:?Release object absent and no bootstrap artifact provided}"
- curl --retry 3 --connect-timeout 10 --max-time 90 -fsS "$CRM_P7_BOOTSTRAP_URL" -o bootstrap.zip
- jar xf bootstrap.zip crm-release.tgz
- mv crm-release.tgz release.tgz
- verify_release
- s3_request --upload-file release.tgz -H 'Content-Type: application/gzip' "$s3_url"
- s3_request "$s3_url" -o readback.tgz
- printf '%s  readback.tgz\n' "$CRM_P7_RELEASE_SHA256" | sha256sum -c -
- rm -f bootstrap.zip readback.tgz
- printf 'CRM_RELEASE_STAGED %s\n' "$CRM_P7_RELEASE_SHA256"
-fi
+s3_request "$s3_url" -o release.tgz
+verify_release
 tar -xzf release.tgz
 touch dist/index.html
 # SQL files are in the checksum-verified release; use an explicit path for Flyway.
