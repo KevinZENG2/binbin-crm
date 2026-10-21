@@ -163,6 +163,8 @@ jobs:
         with:
           name: p8a-ui
           path: p8a-ui/
+      - name: Verify private release transport without external credentials
+        run: python3 -m unittest discover -s server/test-support -p test_release_transport.py
       - name: Package verified private release
         run: python3 server/ops/package_release.py /tmp/crm-release.tgz
       - uses: actions/upload-artifact@v4

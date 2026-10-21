@@ -6,14 +6,14 @@
   "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
   "apiServiceId": "5de432e5-b90a-4f2e-ae7c-149619956985",
   "backupServiceId": "2376373d-f291-4c8c-8e4b-686f7e4cd4b5",
-  "startScriptSha256": "bd6f4eb89ef89f8e9345119f33a288a68029b9e94c5d36622da9ce55b5d5d385",
+  "startScriptSha256": "8708ccddca658dec1ea9b6c781315e7ac185e45795ac10cddf48d630b0a89660",
   "backupScriptSha256": "d9ed2ca73773429a82d4f45e05f77bf2f2f3a00f6c2bed7748b033081259fb2c",
   "backupScheduleUtc": "0 18 * * *",
   "defaultProvider": "DEEPSEEK",
   "aiEnabled": false,
   "supplierKeyProvided": false,
   "releaseArchive": "pending CI",
-  "status": "CI passed; pending Railway outage recovery",
+  "status": "Application CI passed; four offline transport tests passed; Railway deployments still paused",
   "releaseSteps": [
     "Verify terminal GitHub CI success and download its private release artifact",
     "Verify archive SHA256 and upload privately using existing bucket credentials",
@@ -30,5 +30,6 @@
     "AI disabled until supplier account is configured"
   ],
   "workflowRun": 39594818425,
-  "releaseArchiveSha256": "30e30e68a74ea201056aba07b3a7c1ab4bdbd95c221399e95d8c298e8a018969"
+  "releaseArchiveSha256": "30e30e68a74ea201056aba07b3a7c1ab4bdbd95c221399e95d8c298e8a018969",
+  "transport": "Verified source fragments bootstrap a private S3 object using runtime-owned storage credentials; later starts read the object"
 }

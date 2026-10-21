@@ -10,10 +10,23 @@
   "objectKey": "system/releases/crm/0.22.0/30e30e68a74ea201056aba07b3a7c1ab4bdbd95c221399e95d8c298e8a018969.tgz",
   "uploadedToPrivateStorage": false,
   "cloudDeploymentCompleted": false,
-  "reason": "Railway control plane outage; live application remains 0.21.0 and schema V28",
+  "reason": "Railway API partially recovered, but deployment source connection returned Deploys have been paused temporarily; application remains 0.21.0 / V28",
   "realSupplierCallVerified": false,
   "defaultProvider": "DEEPSEEK",
   "workflowConclusion": "success",
   "uiChecks": 5,
-  "apiChecks": 26
+  "apiChecks": 26,
+  "deploymentAttempt": {
+    "date": "2026-10-21",
+    "backupVariablesWritten": true,
+    "backupScriptSha256": "d9ed2ca73773429a82d4f45e05f77bf2f2f3a00f6c2bed7748b033081259fb2c",
+    "backupDeploymentChanged": false,
+    "backupActiveDeployment": "8a5fe452-25a2-4731-b8dd-9960dbb47182",
+    "backupScheduleUtc": "0 18 * * *",
+    "sourceConnectResult": "Deploys have been paused temporarily",
+    "applicationConfigChanged": false,
+    "applicationFragmentsUploaded": false,
+    "transportBehaviorTestsPassed": 4,
+    "startupShellSyntaxValid": true
+  }
 }
