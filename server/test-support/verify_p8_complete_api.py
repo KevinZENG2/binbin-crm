@@ -65,7 +65,7 @@ try:
  check('Forged member workspace IDs and viewer access are rejected')
  # Create scenario fixtures through canonical APIs instead of depending on unrelated suites.
  due=str(datetime.date.today()+datetime.timedelta(days=7))
- owner.req('/opportunities','POST',{'customerId':uid(301),'sourceLeadId':None,'title':'P8场景商机验收','ownerMemberId':uid(200),'amountCents':10000,'closeDate':due,'nextAction':'核实需求','description':'隔离素材'})
+ owner.req('/opportunities','POST',{'customerId':uid(301),'sourceLeadId':None,'title':'P8场景商机验收','ownerMemberId':uid(200),'amountCents':10000,'closeDate':due,'nextAction':'核实需求','description':'隔离素材'},status=201)
  owner.req('/campaigns','POST',{'name':'P8活动建议验收','description':'隔离素材','ownerMemberId':uid(200),'channel':'FOLLOW_UP','sourceChannel':'EVENT','budgetCents':10000,'plannedStart':str(datetime.date.today()),'plannedEnd':due,'subject':'需求核实','body':'仅供隔离测试，不对外发送','taskDueDate':due,'expectedVersion':0})
  for task in ('CUSTOMER_SUMMARY','OPPORTUNITY_COACH','TICKET_REPLY','TICKET_TRIAGE','CAMPAIGN_ADVICE','LEAD_ASSESSMENT','VISIT_PREP','FOLLOWUP_DRAFT','WEEKLY_SUMMARY','ANOMALY_EXPLAIN'):
   rows=owner.req('/ai/tasks/'+task+'/sources')['items']
@@ -94,6 +94,12 @@ try:
  draft=owner.req('/ai/runs/'+run['id']+'/proposals','POST',lead_body());sql("UPDATE crm_ai_proposal SET expires_at=now()-interval '1 second' WHERE id='"+draft['id']+"'")
  owner.req('/ai/proposals/'+draft['id']+'/confirm','POST',confirm(draft),status=409)
  check('Lead owner forgery and expired save confirmations are blocked')
+ # Subscription expiry must also block the final save after AI generation and preparation.
+ run=generate();draft=owner.req('/ai/runs/'+run['id']+'/proposals','POST',lead_body());expiration=sql("SELECT subscription_end FROM sys_tenant WHERE id='"+uid(1)+"'")
+ sql("UPDATE sys_tenant SET subscription_end=now()-interval '1 second' WHERE id='"+uid(1)+"'")
+ try:owner.req('/ai/proposals/'+draft['id']+'/confirm','POST',confirm(draft),status=403)
+ finally:sql("UPDATE sys_tenant SET subscription_end='"+expiration+"' WHERE id='"+uid(1)+"'")
+ check('Subscription expiry between generation and confirmation prevents business mutation')
  # Source edits invalidate precomputed follow-up drafts.
  follow=generate('FOLLOWUP_DRAFT',uid(301),'P8_CLEAN_FOLLOWUP')
  activity={'customerId':uid(301),'opportunityId':None,'activityType':'CALL','content':'客户已收到资料，待核实评估流程','occurredAt':datetime.datetime.now(datetime.timezone.utc).isoformat()}
@@ -122,8 +128,12 @@ try:
  check('Emergency scenario shutdown stops prepared calls before dispatch',len(calls())==before)
  release('NEW_LEAD',percent=0);owner.req('/ai/preview','POST',{'taskType':'NEW_LEAD','recordId':uid(200),'dataApproved':True},status=409)
  release('NEW_LEAD');check('Zero-percent rollout excludes all tenants; full release restores eligibility')
+ prepared=prepare()
+
  row=next(r for r in platform.req('/platform/ai/prompts')['releases'] if r['taskType']=='NEW_LEAD');old=row['promptId']
  new=platform.req('/platform/ai/prompts','POST',{'taskType':'NEW_LEAD','title':'隔离验收新版本','instruction':'仅整理明确事实，未知字段留空。'})['id'];release('NEW_LEAD',prompt_id=new)
+ owner.req('/ai/runs','POST',prepared,status=409)
+ check('Publishing a prompt version invalidates older send confirmations')
  row=next(r for r in platform.req('/platform/ai/prompts')['releases'] if r['taskType']=='NEW_LEAD');platform.req('/platform/ai/releases/NEW_LEAD/rollback','POST',{'promptId':new,'enabled':True,'rolloutPercent':100,'expectedVersion':row['version']})
  row=next(r for r in platform.req('/platform/ai/prompts')['releases'] if r['taskType']=='NEW_LEAD')
  check('Prompt rollback restores the previous immutable version',row['promptId']==old and row['previousPromptId']==new)
