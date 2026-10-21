@@ -56,5 +56,7 @@ public class AiScenarioService {
    default->throw ApiError.bad("AI 来源无效");};
   for(String field:fields)if(source.get(field)!=null)out.put(field,clean(source.get(field),List.of("description","progress","achievements","risks","nextActions","notes").contains(field)?2500:400));return out;
  });}
+ /** Field sets catch per-record share changes; aggregate sources also bind the visible population. */
+ public String accessHash(AuthService.Session s,String type,Map<String,Object> record){return b.tx.execute(st->{var a=actor(s);var permission=map("member",a.tenant().memberId(),"department",a.departmentId(),"roles",new TreeSet<>(a.tenant().roles()),"customer",a.access(),"business",a.businessAccess(),"commerce",a.commerceAccess(),"trade",a.tradeAccess(),"service",a.p3Access(),"delivery",a.deliveryAccess(),"fields",new TreeSet<>(record.keySet()));if(type.equals("ANOMALY_EXPLAIN"))permission.put("aggregateSource",Crypto.hash(b.json(record)));return Crypto.hash(b.json(permission));});}
  public String sourceHash(AuthService.Session s,String type,UUID id){return Crypto.hash(b.json(context(s,type,id)));}
 }

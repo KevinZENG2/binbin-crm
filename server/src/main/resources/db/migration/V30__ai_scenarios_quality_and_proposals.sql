@@ -37,7 +37,7 @@ CREATE TABLE crm_ai_quality_policy(
  CHECK(jsonb_typeof(sensitive_terms)='array' AND jsonb_array_length(sensitive_terms)<=20)
 );
 ALTER TABLE crm_ai_run ADD COLUMN prompt_version_id uuid REFERENCES sys_ai_prompt_version(id),
- ADD COLUMN release_version bigint,ADD COLUMN quality_policy_version bigint,ADD COLUMN source_hash char(64),
+ ADD COLUMN release_version bigint,ADD COLUMN quality_policy_version bigint,ADD COLUMN source_hash char(64),ADD COLUMN access_hash char(64),
  ADD COLUMN quality_status varchar(20) NOT NULL DEFAULT 'NOT_EVALUATED' CHECK(quality_status IN('NOT_EVALUATED','PASS','REVIEW','BLOCKED')),
  ADD COLUMN quality_findings jsonb NOT NULL DEFAULT '[]',
  ADD COLUMN review_status varchar(16) NOT NULL DEFAULT 'PENDING' CHECK(review_status IN('PENDING','ACCEPTED','REJECTED')),
