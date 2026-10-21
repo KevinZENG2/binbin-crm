@@ -65,9 +65,13 @@ jobs:
           CRM_SEED_PASSWORD: acceptance-only-account-2026
           CRM_COOKIE_SECURE: 'false'
           CRM_STAGE: test
+          SPRING_PROFILES_ACTIVE: acceptance
+          CRM_AI_ENABLED: 'true'
+          CRM_AI_OPENAI_API_KEY: crm-acceptance-only
           CRM_INTEGRATION_ENCRYPTION_KEY: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'
         run: |
-          java -jar server/target/crm-server-0.21.0.jar --spring.web.resources.static-locations=file:"$PWD"/dist/ > /tmp/crm-p6-api.log 2>&1 &
+          python3 server/test-support/ai_provider_stub.py > /tmp/crm-ai-stub.log 2>&1 &
+          java -jar server/target/crm-server-0.22.0.jar --spring.web.resources.static-locations=file:"$PWD"/dist/ > /tmp/crm-p6-api.log 2>&1 &
           crm_p6_api_pid=$!
           for attempt in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:8080/api/v1/health > /dev/null; then exit 0; fi
@@ -111,6 +115,17 @@ jobs:
         with:
           name: p7-acceptance
           path: p7-acceptance.json
+      - name: Verify P8-A provider, confirmation, budget and isolation boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p8a-acceptance.json
+        run: python3 server/test-support/verify_p8a_api.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p8a-acceptance
+          path: p8a-acceptance.json
       - name: Install isolated browser test tools
         run: |
           npm install --prefix /tmp/crm-p7-ui --no-audit --no-fund playwright@1.56.1
@@ -137,6 +152,17 @@ jobs:
         with:
           name: p7-ui
           path: p7-ui/
+      - name: Verify P8-A AI administration and confirmation UI
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_PLAYWRIGHT_MODULE: /tmp/crm-p7-ui/node_modules/playwright
+        run: node server/test-support/verify_p8a_ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p8a-ui
+          path: p8a-ui/
       - name: Package verified private release
         run: python3 server/ops/package_release.py /tmp/crm-release.tgz
       - uses: actions/upload-artifact@v4

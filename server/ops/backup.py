@@ -38,6 +38,8 @@ P6_PERFORMANCE_TABLES=set('crm_sales_target crm_commission_rule crm_commission_r
 
 P7_AUTOMATION_TABLES=set("crm_automation_rule crm_automation_revision crm_automation_event crm_automation_run crm_automation_attempt".split())
 P7_WORKSPACE_TABLES=set("crm_object_policy crm_workspace_attachment crm_workspace_notice crm_public_form crm_public_submission".split())
+P8_AI_TABLES={"sys_ai_model","crm_ai_policy","crm_ai_usage"}
+P8_AI_RLS={"crm_ai_policy","crm_ai_usage"}
 P7_MIGRATION_TABLES=set("crm_migration_batch crm_pilot_run".split())
 
 def schema_sets(version):
@@ -50,11 +52,12 @@ def schema_sets(version):
     if version>=17:tables|=COMMERCIAL_OPERATIONS_TABLES
     for required,group in ((18,SALES_FOUNDATION_TABLES),(19,RESOURCE_POOL_TABLES),(20,CUSTOMER_COLLABORATION_TABLES),(21,OPPORTUNITY_LINE_TABLES),(22,SALES_ORDER_TABLES),(23,P6_FINANCE_TABLES),(24,P6_SERVICE_TABLES),(25,P6_PERFORMANCE_TABLES),(26,P7_AUTOMATION_TABLES),(27,P7_WORKSPACE_TABLES),(28,P7_MIGRATION_TABLES)):
         if version>=required:tables|=group;rls|=group
+    if version>=29:tables|=P8_AI_TABLES;rls|=P8_AI_RLS
     return tables,rls
 
 def validate_schema(info):
     versions=[str(row[0]) for row in info['migrations']]
-    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,29)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
+    if versions not in [[str(i) for i in range(1,v+1)] for v in range(5,30)] or not all(row[1] for row in info['migrations']):raise RuntimeError('UNKNOWN_OR_FAILED_MIGRATION')
     version=int(versions[-1]);tables,rls=schema_sets(version)
     if set(info['counts'])!=tables:raise RuntimeError('UNEXPECTED_BACKUP_TABLE_SET')
     if {row[0] for row in info['rls']}!=rls or not all(row[1] and row[2] and row[3]=='crm_migrator' for row in info['rls']):raise RuntimeError('RESTORE_RLS_MISMATCH')
