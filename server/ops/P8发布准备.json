@@ -1,0 +1,27 @@
+{
+  "version": "0.23.0",
+  "migration": 30,
+  "githubCommit": "8b308fb46c6b5d3dcbe20cc6aa6016352f326725",
+  "ciRun": 39606224923,
+  "ciStatus": "success",
+  "liveVersion": "0.21.0",
+  "liveMigration": 28,
+  "appDeployment": "51ded2ae-0ef6-4d81-8e8b-031673febe3d",
+  "backupPendingCodeSha256": "193edde7e9b0f61b7b7f0c5e2c305132f2579c25f899c6dcfc8c1e157fdfc83b",
+  "backupActiveDeployment": "8a5fe452-25a2-4731-b8dd-9960dbb47182",
+  "backupDeployAttempt": "Deploys have been paused temporarily",
+  "backupScheduleUtc": "0 18 * * *",
+  "actualSupplierKeyConfigured": true,
+  "notes": "P8 software and full isolated CI passed. Backend DeepSeek key stored for next deployment; independent synthetic text call succeeded. Live application remains 0.21.0/V28. New cloud backup and restore are pending platform deployment recovery.",
+  "actualSupplierKeyActiveInLiveDeployment": false,
+  "aiMasterEnabled": false,
+  "ciRunNumber": 66,
+  "release": {
+    "bytes": 515954,
+    "sha256": "d4da837ba424c73d2d6fed1ee3c02b09a0e42ac4aa29e515673fb56500ab4ea8"
+  },
+  "releaseArtifactId": 12348173543,
+  "apiChecks": 38,
+  "uiChecks": 10,
+  "checkedAt": "2026-10-21T13:18:46.386132+00:00"
+}
