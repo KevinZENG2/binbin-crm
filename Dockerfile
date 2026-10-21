@@ -15,7 +15,7 @@ RUN mvn -B -ntp verify
 FROM eclipse-temurin:21-jre
 WORKDIR /opt/crm
 RUN useradd --system --uid 10001 crm
-COPY --from=java /build/target/crm-server-0.21.0.jar ./crm.jar
+COPY --from=java /build/target/crm-server-*.jar ./crm.jar
 COPY --from=ui /build/dist ./ui
 USER 10001
 EXPOSE 8080
