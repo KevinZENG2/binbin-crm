@@ -2,7 +2,7 @@
   "version": "0.23.0",
   "migration": 30,
   "githubCommit": "8b308fb46c6b5d3dcbe20cc6aa6016352f326725",
-  "ciRun": 39606224923,
+  "ciRun": 39746101965,
   "ciStatus": "success",
   "liveVersion": "0.21.0",
   "liveMigration": 28,
@@ -12,10 +12,10 @@
   "backupDeployAttempt": "Deploys have been paused temporarily",
   "backupScheduleUtc": "0 18 * * *",
   "actualSupplierKeyConfigured": null,
-  "notes": "P8 software and isolated CI passed. Live health remains 0.21.0. Railway management authorization has expired and builds remain paused. Following the official environment-variable security notice, previously stored supplier keys and other secrets require rotation and access review before release/AI enablement. No new deployment, credential rotation, or cloud log review has been completed; account-specific exposure is not confirmed.",
+  "notes": "P8 application regression passed in Actions run 68. Independent Docker preview passed 4 preparation tests and 16 real runtime/TLS/RLS/attachment/persistence checks, without Railway credentials. This is synthetic CI acceptance, not a public cloud deployment. Render remains unconnected. Old public health is UP/0.21.0. Supplier credential replacement, old-environment access review, new-cloud AI billing, backup and restore acceptance are still pending.",
   "actualSupplierKeyActiveInLiveDeployment": false,
   "aiMasterEnabled": false,
-  "ciRunNumber": 66,
+  "ciRunNumber": 68,
   "release": {
     "bytes": 515954,
     "sha256": "d4da837ba424c73d2d6fed1ee3c02b09a0e42ac4aa29e515673fb56500ab4ea8"
@@ -23,10 +23,10 @@
   "releaseArtifactId": 12348173543,
   "apiChecks": 38,
   "uiChecks": 10,
-  "checkedAt": "2026-10-22T01:14:37.732910+00:00",
+  "checkedAt": "2026-10-22T08:21:05Z",
   "supplierKeyPreviouslyConfigured": true,
   "supplierKeyStatus": "must_revoke_and_replace_before_enable; not verified after incident",
-  "releaseStatus": "blocked_platform_outage_reauthentication_and_credential_rotation",
+  "releaseStatus": "AWAITING_ALTERNATIVE_CLOUD_CONNECTION",
   "managementReadAuthorized": false,
   "managementReadError": "oauth_token_invalid_grant",
   "liveHealthHttp": 200,
@@ -39,5 +39,20 @@
     "crmAccountExposureConfirmed": false,
     "notice": "https://blog.railway.com/p/security-disclosure-wednesday-october-21st",
     "runbook": "docs/P8发布恢复记录.md"
+  },
+  "deploymentProviderPlanned": "Render",
+  "deploymentProviderConnected": false,
+  "portablePreview": {
+    "codeCommit": "e02e9be19672cacf369beb1ec8f6d8cb23703c66",
+    "ciRun": 39746101946,
+    "ciRunNumber": 2,
+    "jobId": 119714817328,
+    "ciStatus": "success",
+    "configurationTests": 4,
+    "containerChecks": 16,
+    "artifactId": 12410994206,
+    "artifactZipSha256": "c9a060d39a736ae162b1c5836655c8154e4d7fecb5625d3db810a867f9fcd776",
+    "cloudDeployed": false,
+    "report": "docs/独立预览容器验收.json"
   }
 }
