@@ -7,3 +7,4 @@ server/test-support
 .env*
 *.log
 __pycache__
+.crm-preview

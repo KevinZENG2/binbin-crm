@@ -10,3 +10,4 @@ __pycache__/
 server/test-support/*.data/
 
 server/ops/assets/*.ttf
+.crm-preview/
