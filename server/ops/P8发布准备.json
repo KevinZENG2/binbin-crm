@@ -11,8 +11,8 @@
   "backupActiveDeployment": "8a5fe452-25a2-4731-b8dd-9960dbb47182",
   "backupDeployAttempt": "Deploys have been paused temporarily",
   "backupScheduleUtc": "0 18 * * *",
-  "actualSupplierKeyConfigured": true,
-  "notes": "P8 software and full isolated CI passed. Backend DeepSeek key stored for next deployment; independent synthetic text call succeeded. Live application remains 0.21.0/V28. New cloud backup and restore are pending platform deployment recovery.",
+  "actualSupplierKeyConfigured": null,
+  "notes": "P8 software and isolated CI passed. Live health remains 0.21.0. Railway management authorization has expired and builds remain paused. Following the official environment-variable security notice, previously stored supplier keys and other secrets require rotation and access review before release/AI enablement. No new deployment, credential rotation, or cloud log review has been completed; account-specific exposure is not confirmed.",
   "actualSupplierKeyActiveInLiveDeployment": false,
   "aiMasterEnabled": false,
   "ciRunNumber": 66,
@@ -23,5 +23,21 @@
   "releaseArtifactId": 12348173543,
   "apiChecks": 38,
   "uiChecks": 10,
-  "checkedAt": "2026-10-21T13:18:46.386132+00:00"
+  "checkedAt": "2026-10-22T01:14:37.732910+00:00",
+  "supplierKeyPreviouslyConfigured": true,
+  "supplierKeyStatus": "must_revoke_and_replace_before_enable; not verified after incident",
+  "releaseStatus": "blocked_platform_outage_reauthentication_and_credential_rotation",
+  "managementReadAuthorized": false,
+  "managementReadError": "oauth_token_invalid_grant",
+  "liveHealthHttp": 200,
+  "liveHealthStatus": "UP",
+  "liveMigrationVerification": "last known; current database cannot be queried until management access is restored",
+  "credentialRotation": {
+    "required": true,
+    "completed": false,
+    "logReviewCompleted": false,
+    "crmAccountExposureConfirmed": false,
+    "notice": "https://blog.railway.com/p/security-disclosure-wednesday-october-21st",
+    "runbook": "docs/P8发布恢复记录.md"
+  }
 }
