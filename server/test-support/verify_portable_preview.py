@@ -30,7 +30,7 @@ def uid(n):
 
 
 def wait():
-    for _ in range(120):
+    for attempt in range(120):
         try:
             with urllib.request.urlopen(BASE + '/api/v1/health', timeout=3) as response:
                 body = json.load(response)
@@ -38,6 +38,12 @@ def wait():
                     return body
         except Exception:
             pass
+        if attempt % 5 == 0:
+            identifier = subprocess.check_output(COMPOSE + ['ps', '--all', '--quiet', 'app'], cwd=ROOT, text=True).strip()
+            if identifier:
+                state = subprocess.check_output(['docker', 'inspect', '--format', '{{.State.Status}}', identifier], text=True).strip()
+                if state in ('exited', 'dead'):
+                    raise AssertionError('Application exited before readiness; inspect redacted diagnostics')
         time.sleep(2)
     raise AssertionError('Preview application did not become healthy')
 

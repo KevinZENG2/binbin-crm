@@ -25,6 +25,7 @@ class PreviewConfigurationTests(unittest.TestCase):
             wrong = subprocess.run(['openssl', 'verify', '-CAfile', str(state / 'root-ca.crt'), '-verify_hostname', 'untrusted.example.test', str(state / 'postgres.crt')], capture_output=True)
             self.assertNotEqual(wrong.returncode, 0)
             self.assertEqual(state.stat().st_mode & 0o777, 0o700)
+            self.assertIn('CRM_PREVIEW_ISOLATED=true\n', (state / 'compose.env').read_text())
             for file in (state / 'secrets').iterdir():
                 self.assertEqual(file.stat().st_mode & 0o777, 0o600)
                 self.assertNotIn(file.read_text().strip(), output.getvalue())
@@ -46,6 +47,15 @@ class PreviewConfigurationTests(unittest.TestCase):
                 with patch.object(prepare, 'STATE', state), patch('sys.argv', ['prepare', '--base-url', origin]), self.assertRaises(SystemExit):
                     prepare.main()
                 self.assertFalse(state.exists())
+
+    def test_https_cloud_configuration_keeps_isolated_bypass_off(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state = pathlib.Path(folder) / 'private'
+            with patch.object(prepare, 'STATE', state), patch('sys.argv', ['prepare', '--base-url', 'https://preview.example.test']), contextlib.redirect_stdout(io.StringIO()):
+                prepare.main()
+            config = (state / 'compose.env').read_text()
+            self.assertIn('CRM_PREVIEW_ISOLATED=false\n', config)
+            self.assertIn('CRM_PREVIEW_COOKIE_SECURE=true\n', config)
 
 
 if __name__ == '__main__':

@@ -60,7 +60,7 @@ def main():
         os.chmod(cert, 0o644)
         csr.unlink()
         extension.unlink()
-    write(STATE / 'compose.env', 'CRM_PREVIEW_BASE_URL=' + base_url + '\nCRM_PREVIEW_COOKIE_SECURE=' + str(url.scheme == 'https').lower() + '\nCRM_PREVIEW_PORT=' + str(port if local else 8080) + '\n')
+    write(STATE / 'compose.env', 'CRM_PREVIEW_BASE_URL=' + base_url + '\nCRM_PREVIEW_COOKIE_SECURE=' + str(url.scheme == 'https').lower() + '\nCRM_PREVIEW_ISOLATED=' + str(local and url.scheme == 'http').lower() + '\nCRM_PREVIEW_PORT=' + str(port if local else 8080) + '\n')
     write(STATE / 'metadata.json', json.dumps({'createdAt': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'syntheticPreviewOnly': True, 'certificateDays': 30}, indent=2) + '\n')
     print('CRM_PREVIEW_PREPARED: private files created; no credential values printed')
 
