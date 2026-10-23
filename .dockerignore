@@ -8,3 +8,5 @@ server/test-support
 *.log
 __pycache__
 .crm-preview
+
+vm-output/

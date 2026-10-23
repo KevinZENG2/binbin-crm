@@ -1,0 +1,22 @@
+# Used together with compose.preview.yaml and the bundle's image-lock.json.
+services:
+  app:
+    image: ${CRM_VM_APP_IMAGE:?Use the VM bundle installer}
+    restart: unless-stopped
+    mem_limit: 1g
+  postgres:
+    image: ${CRM_VM_POSTGRES_IMAGE:?Use the VM bundle installer}
+    restart: unless-stopped
+    mem_limit: 256m
+  storage:
+    image: ${CRM_VM_STORAGE_IMAGE:?Use the VM bundle installer}
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      GOMEMLIMIT: 192MiB
+  prepare:
+    image: ${CRM_VM_TOOLS_IMAGE:?Use the VM bundle installer}
+    mem_limit: 256m
+  storage-init:
+    image: ${CRM_VM_TOOLS_IMAGE:?Use the VM bundle installer}
+    mem_limit: 192m

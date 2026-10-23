@@ -12,8 +12,11 @@ import uuid
 
 assert os.environ.get('CRM_PORTABLE_ACCEPTANCE') == 'true', 'Explicit isolated acceptance required'
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-BASE = 'http://127.0.0.1:8080'
+BASE = os.environ.get('CRM_PORTABLE_BASE_URL', 'http://127.0.0.1:8080')
+assert BASE in ('http://127.0.0.1:8080', 'http://127.0.0.1:18080'), 'Acceptance is restricted to local loopback'
 COMPOSE = ['docker', 'compose', '--env-file', '.crm-preview/compose.env', '-f', 'compose.preview.yaml']
+if os.environ.get('CRM_PORTABLE_VM_ACCEPTANCE') == 'true':
+    COMPOSE += ['-f', 'compose.vm.yaml']
 PASSWORD = (ROOT / '.crm-preview/secrets/login_password').read_text().strip()
 checks = []
 
@@ -88,6 +91,16 @@ class Client:
 
 try:
     check('Containerized 0.23.0 serves a ready database-backed health endpoint', wait()['version'] == '0.23.0')
+    if os.environ.get('CRM_PORTABLE_VM_ACCEPTANCE') == 'true':
+        for service, limit in (('app', 1024 ** 3), ('postgres', 256 * 1024 ** 2), ('storage', 256 * 1024 ** 2)):
+            identifier = subprocess.check_output(COMPOSE + ['ps', '--quiet', service], cwd=ROOT, text=True).strip()
+            configuration = json.loads(subprocess.check_output(['docker', 'inspect', '--format', '{{json .HostConfig}}', identifier], text=True))
+            assert configuration['Memory'] == limit, 'VM memory limit not applied'
+            if service == 'app':
+                assert configuration['PortBindings']['8080/tcp'] == [{'HostIp': '127.0.0.1', 'HostPort': '18080'}]
+            else:
+                assert not configuration.get('PortBindings'), 'Infrastructure ports must stay private'
+        check('VM resource limits and loopback-only application port are enforced')
     user = subprocess.check_output(COMPOSE + ['exec', '-T', 'app', 'id', '-u'], cwd=ROOT, text=True).strip()
     check('Java application runs as non-root user 10001', user == '10001')
     check('Database migration reached V30', sql('SELECT max(version::int) FROM flyway_schema_history WHERE success;', 'postgres') == '30')

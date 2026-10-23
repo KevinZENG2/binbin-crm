@@ -1,0 +1,105 @@
+name: Package Ubuntu CRM preview
+on:
+  pull_request:
+    paths:
+      - 'compose.vm.yaml'
+      - 'compose.preview.yaml'
+      - 'Dockerfile.preview*'
+      - 'server/ops/vm/**'
+      - 'server/ops/preview/**'
+      - 'server/test-support/*vm*'
+      - '.github/workflows/package-vm-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: vm-preview-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify certificate rejection and existing-site rollback
+        run: python3 -m unittest discover -s server/test-support -p test_vm_installation.py -v
+      - name: Prepare synthetic isolated configuration
+        run: python3 server/ops/preview/prepare.py
+      - name: Build preview images outside the customer's small server
+        run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml build
+      - name: Pull the dedicated PostgreSQL image
+        run: docker pull postgres:18
+      - name: Package prebuilt images with immutable identities
+        run: python3 server/ops/vm/package_vm.py
+      - name: Verify memory-limited VM configuration
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          lock=json.loads(pathlib.Path('vm-output/image-lock.json').read_text())
+          environment=pathlib.Path('.crm-preview/compose.env')
+          environment.write_text(environment.read_text().replace('CRM_PREVIEW_PORT=8080','CRM_PREVIEW_PORT=18080'))
+          with pathlib.Path('.crm-preview/compose.env').open('a') as stream:
+              for name,image in lock['images'].items():
+                  stream.write('CRM_VM_'+name.upper()+'_IMAGE='+image['tag']+'\n')
+          PY
+          docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml -f compose.vm.yaml config --quiet
+          docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml -f compose.vm.yaml up -d --no-build --pull never
+      - name: Verify real VM containers and persistence
+        env:
+          CRM_PORTABLE_ACCEPTANCE: 'true'
+          CRM_PORTABLE_VM_ACCEPTANCE: 'true'
+          CRM_PORTABLE_BASE_URL: http://127.0.0.1:18080
+        run: python3 server/test-support/verify_portable_preview.py
+      - name: Verify dedicated Nginx HTTPS configuration
+        run: |
+          python3 - <<'PY'
+          import pathlib,subprocess
+          state=pathlib.Path('.crm-preview')
+          subprocess.run(['openssl','req','-new','-newkey','rsa:2048','-nodes','-subj','/CN=crm.jiayunsoft.com','-keyout',str(state/'nginx.key'),'-out',str(state/'nginx.csr')],check=True,capture_output=True)
+          (state/'nginx.ext').write_text('subjectAltName=DNS:crm.jiayunsoft.com\nextendedKeyUsage=serverAuth\n')
+          subprocess.run(['openssl','x509','-req','-in',str(state/'nginx.csr'),'-CA',str(state/'root-ca.crt'),'-CAkey',str(state/'secrets/ca_key'),'-set_serial','37','-days','2','-extfile',str(state/'nginx.ext'),'-out',str(state/'nginx.crt')],check=True,capture_output=True)
+          PY
+          docker run -d --name crm-vm-nginx-test --network host -v "$PWD/server/ops/vm/crm.jiayunsoft.com.conf:/etc/nginx/conf.d/binbin-crm.conf:ro" -v "$PWD/.crm-preview/nginx.crt:/etc/nginx/ssl/binbin-crm/fullchain.pem:ro" -v "$PWD/.crm-preview/nginx.key:/etc/nginx/ssl/binbin-crm/privkey.pem:ro" nginx:stable-alpine
+          docker exec crm-vm-nginx-test nginx -t
+          curl --retry 12 --retry-connrefused --retry-delay 1 --fail --silent --show-error --cacert .crm-preview/root-ca.crt --resolve crm.jiayunsoft.com:443:127.0.0.1 https://crm.jiayunsoft.com/api/v1/health
+      - name: Verify HTTPS login with secure cookies and tenant boundaries
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          path=pathlib.Path('.crm-preview/compose.env')
+          text=path.read_text().replace('CRM_PREVIEW_BASE_URL=http://127.0.0.1:8080','CRM_PREVIEW_BASE_URL=https://crm.jiayunsoft.com').replace('CRM_PREVIEW_COOKIE_SECURE=false','CRM_PREVIEW_COOKIE_SECURE=true').replace('CRM_PREVIEW_ISOLATED=true','CRM_PREVIEW_ISOLATED=false')
+          path.write_text(text)
+          PY
+          docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml -f compose.vm.yaml up -d --no-build --pull never app
+          python3 server/test-support/verify_vm_https.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binbin-crm-vm-preview
+          path: |
+            vm-output/binbin-crm-vm-0.23.0.tar.gz
+            vm-output/binbin-crm-vm-0.23.0.tar.gz.sha256
+            vm-output/image-lock.json
+            portable-preview-acceptance.json
+            vm-https-acceptance.json
+          compression-level: 0
+          retention-days: 7
+      - name: Bounded redacted diagnostics
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import pathlib,subprocess
+          output=subprocess.run(['docker','compose','--env-file','.crm-preview/compose.env','-f','compose.preview.yaml','-f','compose.vm.yaml','logs','--no-color','--tail','80'],capture_output=True,text=True)
+          text=output.stdout+'\n'+output.stderr
+          for path in pathlib.Path('.crm-preview/secrets').glob('*'):
+              if path.is_file():
+                  for value in [path.read_text().strip()]+path.read_text().splitlines():
+                      if value:text=text.replace(value,'[REDACTED]')
+          print(text[-18000:])
+          PY
+      - name: Remove disposable CI containers and volumes only
+        if: always()
+        run: |
+          docker rm -f crm-vm-nginx-test 2>/dev/null || true
+          docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml -f compose.vm.yaml down --volumes --remove-orphans
