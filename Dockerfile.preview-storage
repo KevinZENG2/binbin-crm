@@ -1,0 +1,11 @@
+# Isolated preview fixture only. MinIO's last security release is source-only;
+# do not pull the older vulnerable published image or use this as production storage.
+FROM golang:1.26-bookworm AS builder
+ENV CGO_ENABLED=0
+RUN GOBIN=/out go install github.com/minio/minio@RELEASE.2025-10-15T17-29-55Z
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /out/minio /usr/local/bin/minio
+COPY server/ops/preview/start_storage.sh /opt/start-storage.sh
+USER 10001
+ENTRYPOINT ["sh","/opt/start-storage.sh"]

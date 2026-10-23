@@ -1,0 +1,32 @@
+{
+  "phase": "P8-A",
+  "passed": 26,
+  "checks": [
+    "AI routes enforce authentication and separate platform, enterprise-admin and sales roles",
+    "AI starts disabled with no hidden model or secret",
+    "Unconfigured AI records BLOCKED without outbound calls or budget charges",
+    "Platform model settings validate prices, duplicates and optimistic versions",
+    "Provider credentials never appear in platform responses",
+    "Tenant admins configure bounded model, budget and rate settings",
+    "Confirmation preview redacts free-text contact details and credentials",
+    "Sending requires approval and a content-bound confirmation token",
+    "Successful call records reported usage and redacts model output",
+    "Retries reuse one result while confirmation tokens remain single use",
+    "Changed settings and expired confirmations prevent outbound requests",
+    "Concurrent duplicate submissions invoke the supplier once",
+    "Definitive supplier rejection releases reserved tokens and reference cost",
+    "Ambiguous supplier failure retains conservative usage without retry",
+    "Missing supplier usage is charged at the reserved upper bound",
+    "Insufficient token budget blocks before any supplier call",
+    "Insufficient reference-cost budget also blocks before dispatch",
+    "Platform model changes invalidate previously approved sends",
+    "Feedback is attached to authorized records and redacts notes",
+    "Enterprise policy and usage stay isolated",
+    "AI history cannot cross enterprise boundaries",
+    "Revoked record access also removes historical AI results and feedback access",
+    "Expired enterprises cannot preview or initiate paid AI requests",
+    "AI policy and usage tables enforce forced tenant RLS",
+    "Supplier payloads contain neither tools nor plaintext contact details",
+    "Every dispatch records an auditable terminal outcome"
+  ]
+}

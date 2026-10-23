@@ -1,0 +1,59 @@
+name: Verify independent CRM preview
+on:
+  pull_request:
+    paths:
+      - 'compose.preview.yaml'
+      - 'Dockerfile.preview*'
+      - 'server/ops/preview/**'
+      - 'server/test-support/*preview*'
+      - '.github/workflows/verify-portable-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: portable-preview-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  portable-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify certificate and credential preparation
+        run: python3 -m unittest discover -s server/test-support -p test_preview_configuration.py
+      - name: Prepare private synthetic preview
+        run: python3 server/ops/preview/prepare.py
+      - name: Validate deployment configuration without showing secrets
+        run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml config --quiet
+      - name: Build independent application and private storage
+        run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml build
+      - name: Start independent PostgreSQL, HTTPS storage and CRM
+        run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml up -d --no-build
+      - name: Verify runtime, permissions, attachments and persistence
+        env:
+          CRM_PORTABLE_ACCEPTANCE: 'true'
+        run: python3 server/test-support/verify_portable_preview.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: portable-preview-acceptance
+          path: portable-preview-acceptance.json
+      - name: Bounded redacted diagnostic logs
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import pathlib,subprocess
+          root=pathlib.Path('.crm-preview/secrets')
+          values=[p.read_text().strip() for p in root.iterdir() if p.is_file()] if root.exists() else []
+          process=subprocess.run(['docker','compose','--env-file','.crm-preview/compose.env','-f','compose.preview.yaml','logs','--no-color','--tail','100'],capture_output=True,text=True)
+          output=process.stdout+'\n'+process.stderr
+          for value in values:
+              if value:
+                  output=output.replace(value,'[REDACTED]')
+                  if value.startswith('-----BEGIN'):
+                      for line in value.splitlines():output=output.replace(line,'[REDACTED]')
+          print(output[-20000:])
+          PY
+      - name: Remove only this disposable acceptance stack
+        if: always()
+        run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml down --volumes --remove-orphans
