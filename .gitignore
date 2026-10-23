@@ -13,3 +13,6 @@ server/ops/assets/*.ttf
 .crm-preview/
 
 vm-output/
+
+vm-assets/
+.vm-font-venv/

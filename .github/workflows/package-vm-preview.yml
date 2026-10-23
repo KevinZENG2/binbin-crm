@@ -8,6 +8,13 @@ on:
       - 'server/ops/vm/**'
       - 'server/ops/preview/**'
       - 'server/test-support/*vm*'
+      - 'src/**'
+      - 'server/src/**'
+      - 'server/pom.xml'
+      - 'package*.json'
+      - 'index.html'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
       - '.github/workflows/package-vm-preview.yml'
   workflow_dispatch:
 permissions:
@@ -31,6 +38,11 @@ jobs:
         run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml build
       - name: Pull the dedicated PostgreSQL image
         run: docker pull postgres:18
+      - name: Build and verify the fixed public Chinese PDF font
+        run: |
+          python3 -m venv .vm-font-venv
+          .vm-font-venv/bin/pip install 'fonttools==4.61.1'
+          .vm-font-venv/bin/python server/ops/vm/prepare_font.py
       - name: Package prebuilt images with immutable identities
         run: python3 server/ops/vm/package_vm.py
       - name: Verify memory-limited VM configuration
@@ -63,7 +75,7 @@ jobs:
           PY
           docker run -d --name crm-vm-nginx-test --network host -v "$PWD/server/ops/vm/crm.jiayunsoft.com.conf:/etc/nginx/conf.d/binbin-crm.conf:ro" -v "$PWD/.crm-preview/nginx.crt:/etc/nginx/ssl/binbin-crm/fullchain.pem:ro" -v "$PWD/.crm-preview/nginx.key:/etc/nginx/ssl/binbin-crm/privkey.pem:ro" nginx:stable-alpine
           docker exec crm-vm-nginx-test nginx -t
-          curl --retry 12 --retry-connrefused --retry-delay 1 --fail --silent --show-error --cacert .crm-preview/root-ca.crt --resolve crm.jiayunsoft.com:443:127.0.0.1 https://crm.jiayunsoft.com/api/v1/health
+          curl --noproxy crm.jiayunsoft.com --retry 12 --retry-connrefused --retry-delay 1 --fail --silent --show-error --cacert .crm-preview/root-ca.crt --resolve crm.jiayunsoft.com:443:127.0.0.1 https://crm.jiayunsoft.com/api/v1/health
       - name: Verify HTTPS login with secure cookies and tenant boundaries
         run: |
           python3 - <<'PY'
@@ -73,6 +85,7 @@ jobs:
           path.write_text(text)
           PY
           docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml -f compose.vm.yaml up -d --no-build --pull never app
+          docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml -f compose.vm.yaml run --rm --no-deps --entrypoint python3 --volume "$PWD/vm-assets/quote-font.ttf:/opt/crm-font.ttf:ro" --volume "$PWD/server/ops/vm/publish_vm_font.py:/opt/crm-publish-font.py:ro" storage-init /opt/crm-publish-font.py
           python3 server/test-support/verify_vm_https.py
       - uses: actions/upload-artifact@v4
         with:

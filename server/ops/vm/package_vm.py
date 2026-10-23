@@ -50,6 +50,10 @@ def main():
         if compressed.returncode or save.wait():
             raise RuntimeError('Image archive creation failed')
     lock = output / 'image-lock.json'
+    font = ROOT / 'vm-assets/quote-font.ttf'
+    font_manifest = json.loads((ROOT / 'server/ops/assets/font-source.json').read_text())
+    if sha(font) != font_manifest['fontSha256']:
+        raise RuntimeError('Bundled PDF font is missing or invalid')
     lock.write_text(json.dumps({'version': RELEASE, 'sourceCommit': source, 'syntheticPreviewOnly': True,
                                'images': images, 'imageArchiveSha256': sha(image_file)}, indent=2) + '\n')
     names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
@@ -62,6 +66,7 @@ def main():
             archive.add(ROOT / name, arcname='binbin-crm-preview/project/' + name, recursive=False, filter=root_owned)
         archive.add(image_file, arcname='binbin-crm-preview/images.tar.gz', filter=root_owned)
         archive.add(lock, arcname='binbin-crm-preview/image-lock.json', filter=root_owned)
+        archive.add(font, arcname='binbin-crm-preview/assets/quote-font.ttf', filter=root_owned)
     digest = sha(target)
     (output / (target.name + '.sha256')).write_text(digest + '  ' + target.name + '\n')
     print(json.dumps({'file': target.name, 'sha256': digest, 'bytes': target.stat().st_size, 'sourceCommit': source}))

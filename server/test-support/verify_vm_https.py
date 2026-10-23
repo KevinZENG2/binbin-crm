@@ -18,7 +18,7 @@ checks = []
 def request(path, method='GET', body=None, expected=200):
     header_file = STATE / 'https-response.headers'
     cookie_file = STATE / 'https-test.cookies'
-    args = ['curl', '--silent', '--show-error', '--max-time', '15', '--cacert', str(STATE / 'root-ca.crt'),
+    args = ['curl', '--silent', '--show-error', '--noproxy', 'crm.jiayunsoft.com', '--max-time', '15', '--cacert', str(STATE / 'root-ca.crt'),
             '--resolve', 'crm.jiayunsoft.com:443:127.0.0.1', '--cookie-jar', str(cookie_file), '--cookie', str(cookie_file),
             '--dump-header', str(header_file), '--write-out', '\n%{http_code}', '-X', method,
             '-H', 'Content-Type: application/json', '-H', 'X-CSRF-Token: ' + csrf,
@@ -69,6 +69,16 @@ request('/api/v1/platform/ai/prompts', expected=403)
 check('Cross-tenant records and platform administration remain isolated over HTTPS', True)
 page, _ = request('/')
 check('The live frontend is served through the same HTTPS virtual host', b'<html' in page.lower())
+product, _ = request('/api/v1/products', 'POST', {'sku': 'VM-PDF-' + uuid.uuid4().hex[:8], 'name': '中文报价验收服务',
+    'kind': 'SERVICE', 'unit': '次', 'priceCents': 10000, 'costCents': 5000, 'taxRateBps': 1300,
+    'category': '虚构验收', 'description': '隔离测试，不联系客户', 'status': 'ACTIVE', 'expectedVersion': 0})
+quote, _ = request('/api/v1/quotes', 'POST', {'customerId': '00000000-0000-4000-8000-000000000301',
+    'title': '中文 PDF 虚构报价', 'validUntil': str(datetime.date.today() + datetime.timedelta(days=30)),
+    'notes': '仅用于部署验收', 'expectedVersion': 0,
+    'lines': [{'productId': json.loads(product)['id'], 'quantity': '1', 'unitPriceCents': 10000, 'discountBps': 0, 'description': '中文服务明细'}]})
+pdf, pdf_headers = request('/api/v1/quotes/' + json.loads(quote)['id'] + '/pdf?version=0')
+check('Chinese quote PDF downloads as a real PDF using the bundled verified font',
+      pdf.startswith(b'%PDF-') and len(pdf) > 5000 and 'application/pdf' in pdf_headers.lower())
 report = {'checkedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'passed': len(checks),
           'checks': checks, 'status': 'SUCCESS', 'syntheticOnly': True, 'actualServerDeployed': False,
           'certificateVerification': 'required', 'secureCookie': True, 'isolatedAcceptance': False}

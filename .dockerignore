@@ -10,3 +10,6 @@ __pycache__
 .crm-preview
 
 vm-output/
+
+vm-assets/
+.vm-font-venv/

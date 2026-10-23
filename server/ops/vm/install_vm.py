@@ -124,7 +124,8 @@ def compose(*args, capture=False):
 def wait_for_app():
     for attempt in range(120):
         try:
-            with urllib.request.urlopen('http://127.0.0.1:18080/api/v1/health', timeout=3) as response:
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with opener.open('http://127.0.0.1:18080/api/v1/health', timeout=3) as response:
                 health = json.load(response)
                 if health.get('status') == 'UP' and health.get('version') == '0.23.0':
                     return health
@@ -179,7 +180,7 @@ def install_nginx(cert, key, root=pathlib.Path('/etc/nginx')):
             target.unlink(missing_ok=True)
             run('nginx', '-t', capture=True)
         raise
-    result = run('curl', '--fail', '--silent', '--show-error', '--max-time', '20', '--resolve',
+    result = run('curl', '--fail', '--silent', '--show-error', '--noproxy', DOMAIN, '--max-time', '20', '--resolve',
                  DOMAIN + ':443:127.0.0.1', 'https://' + DOMAIN + '/api/v1/health', capture=True)
     if json.loads(result.stdout).get('version') != '0.23.0':
         raise ValueError('HTTPS virtual host did not return the new CRM version')
@@ -203,6 +204,10 @@ def main():
     lock = read_lock(BUNDLE / 'image-lock.json')
     if sha(BUNDLE / 'images.tar.gz') != lock['imageArchiveSha256']:
         raise ValueError('Image archive digest mismatch')
+    font_manifest = json.loads((PROJECT / 'server/ops/assets/font-source.json').read_text())
+    font = BUNDLE / 'assets/quote-font.ttf'
+    if sha(font) != font_manifest['fontSha256']:
+        raise ValueError('Bundled PDF font digest mismatch')
     if BUNDLE.is_symlink() or PROJECT.is_symlink():
         raise ValueError('Deployment directory must not be a symlink')
     with tempfile.TemporaryDirectory(prefix='binbin-crm-certificate-') as temporary:
@@ -247,9 +252,14 @@ def main():
         compose('config', '--quiet')
         compose('up', '-d', '--no-build', '--pull', 'never')
         health = wait_for_app()
+        compose('run', '--rm', '--no-deps', '--entrypoint', 'python3',
+                '--volume', str(font) + ':/opt/crm-font.ttf:ro',
+                '--volume', str(PROJECT / 'server/ops/vm/publish_vm_font.py') + ':/opt/crm-publish-font.py:ro',
+                'storage-init', '/opt/crm-publish-font.py')
         install_nginx(cert, key)
         report = {'checkedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'health': health,
                   'sourceCommit': lock['sourceCommit'], 'localHttpsVerified': True, 'publicDnsAndAccessVerified': False,
+                  'quoteFontPublished': True,
                   'syntheticPreviewOnly': True, 'internalCertificateDays': 30, 'url': 'https://' + DOMAIN}
         (BUNDLE / 'deployment-status.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
         print('LOCAL_HTTPS_READY: https://' + DOMAIN + '; verify public DNS and external access next')
