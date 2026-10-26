@@ -204,6 +204,8 @@ jobs:
           path: p6-acceptance.json
       - run: sudo apt-get update && sudo apt-get install -y python3-boto3 python3-psycopg2 python3-cryptography
       - run: python3 -m unittest discover -s server/test-support -p test_backup_operations.py
+      - name: Verify manual recovery compatibility and target boundaries
+        run: python3 -m unittest discover -s server/test-support -p test_manual_restore.py
       - uses: docker/setup-buildx-action@v4
       - uses: docker/build-push-action@v7
         with:
