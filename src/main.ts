@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
+import WorkspaceRoot from './WorkspaceRoot.vue';
 import BackendWorkspace from './BackendWorkspace.vue';
 import PortalWorkspace from './PortalWorkspace.vue';
 import ServiceFeedback from './ServiceFeedback.vue';
@@ -13,4 +14,5 @@ const feedback=query.has('service-feedback');if(feedback)document.documentElemen
 const live=mode==='live'||(mode!=='demo'&&(import.meta.env.VITE_RUNTIME_MODE==='live'||window.location.hostname.endsWith('.up.railway.app')));
 document.documentElement.classList.toggle('crm-preview-dark',!live&&!portal);
 if(query.has('intake'))document.documentElement.classList.add('crm-dark');
-createApp(query.has('intake')?PublicIntake:feedback?ServiceFeedback:portal?PortalWorkspace:live?BackendWorkspace:App).mount('#app');
+const workspace=query.has('intake')?PublicIntake:feedback?ServiceFeedback:portal?PortalWorkspace:live?BackendWorkspace:App;
+createApp(WorkspaceRoot,{workspace,showPreviewNotice:live||portal||feedback||query.has('intake')}).mount('#app');
