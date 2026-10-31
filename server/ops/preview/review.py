@@ -1,5 +1,6 @@
 """A bounded cloud acceptance session. Never uses existing customer infrastructure."""
 import argparse
+import base64
 import datetime as dt
 import hashlib
 import http.cookiejar
@@ -48,6 +49,16 @@ def private_write(path, text):
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(descriptor, 'w') as stream:
         stream.write(text)
+
+
+def encrypt_login_password(password, public_key):
+    # Actions artifacts may be readable to everyone in a public repository.
+    # Only the public key travels with source; the recipient retains the private key separately.
+    encrypted = subprocess.run(['openssl', 'pkeyutl', '-encrypt', '-pubin', '-inkey', str(public_key),
+        '-pkeyopt', 'rsa_padding_mode:oaep', '-pkeyopt', 'rsa_oaep_md:sha256',
+        '-pkeyopt', 'rsa_mgf1_md:sha256'], input=password.encode(), capture_output=True, check=True).stdout
+    return {'algorithm': 'RSA-OAEP-SHA256', 'ciphertext': base64.b64encode(encrypted).decode(),
+            'publicKeySha256': hashlib.sha256(public_key.read_bytes()).hexdigest()}
 
 
 def compose(*args):
@@ -173,15 +184,16 @@ def verify(origin, expires):
     private_write(OUTPUT / 'readiness.json', json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     access = {'企业工作台': origin + '/?mode=live&account=owner',
               '平台管理': origin + '/?mode=live&account=platform-operator',
-              '企业登录账号': 'owner', '平台登录账号': 'platform-operator', '本次验收登录密码': password,
+              '企业登录账号': 'owner', '平台登录账号': 'platform-operator',
+              '加密登录口令': encrypt_login_password(password, ROOT / 'server/ops/preview/review-access-public.pem'),
               '结束时间UTC': expires, '说明': '仅使用测试资料；本次预览限时两小时，结束后测试数据不保留。AI 服务未开启。'}
     private_write(OUTPUT / 'access.json', json.dumps(access, ensure_ascii=False, indent=2) + '\n')
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary:
         with open(summary, 'a') as stream:
             stream.write('## Temporary CRM acceptance is ready\n\n' + origin + '\n\nExpires: ' + expires +
-                         '\n\nSynthetic data only. This is not persistent hosting. Login access is in the private review-access artifact.\n')
-    print('CRM_REVIEW_READY: verified HTTPS, login, tenant boundaries and Chinese PDF; private access artifact prepared', flush=True)
+                         '\n\nSynthetic data only. This is not persistent hosting. Login credentials are encrypted in review-access; the recipient retains the private key separately.\n')
+    print('CRM_REVIEW_READY: verified HTTPS, login, tenant boundaries and Chinese PDF; encrypted access artifact prepared', flush=True)
 
 
 def start():
