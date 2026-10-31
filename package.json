@@ -1,12 +1,12 @@
 {
   "name": "binbin-crm-preview",
   "private": true,
-  "version": "0.13.0",
+  "version": "0.23.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 4173",
     "build": "vue-tsc --noEmit && vite build",
-    "test": "node --import tsx --test tests/domain.test.ts"
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "vue": "^3.5.0"

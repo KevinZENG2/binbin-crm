@@ -1,0 +1,70 @@
+{
+  "stage": "P7-A",
+  "version": "0.20.0",
+  "checkedAt": "2026-10-20T01:32:33.770970+00:00",
+  "deploymentId": "e7d94499-e057-4cfd-8bc1-d7ae6a624cc6",
+  "deploymentStatus": "SUCCESS",
+  "verifiedCodeCommit": "90b9e6367e2c5d1c8886af24b09ae53e99725b30",
+  "ciRunId": 39352862427,
+  "ciConclusion": "success",
+  "releaseSha256": "602c6d8a26cde7c99f4852f2370678e3979c0944197d1ed1b4611215d2619738",
+  "health": {
+    "database": "PostgreSQL",
+    "status": "UP",
+    "version": "0.20.0",
+    "backend": "Java 21 / Spring Boot"
+  },
+  "checks": [
+    {
+      "path": "/?account=owner",
+      "status": 200,
+      "sha256": "9504ff576e5dce66d08d3c80b6c34e9a773a8c3aa63800fc96ed9a18b2f9fa2d",
+      "matchesLocal": true
+    },
+    {
+      "path": "/?account=platform-operator",
+      "status": 200,
+      "sha256": "9504ff576e5dce66d08d3c80b6c34e9a773a8c3aa63800fc96ed9a18b2f9fa2d",
+      "matchesLocal": true
+    },
+    {
+      "path": "/?mode=demo",
+      "status": 200,
+      "sha256": "9504ff576e5dce66d08d3c80b6c34e9a773a8c3aa63800fc96ed9a18b2f9fa2d",
+      "matchesLocal": true
+    },
+    {
+      "path": "/assets/index-BZW57ULC.js",
+      "status": 200,
+      "sha256": "fd1b1aebb4d1cd85395d1a508146b95e519437cb380047684c5abf1602a4202d",
+      "matchesLocal": true
+    },
+    {
+      "path": "/assets/index-DO9Z2CUR.css",
+      "status": 200,
+      "sha256": "632027562e3a12670dd77b29cbc4fd5eb428dd4fd3fba295c22ee069af12495c",
+      "matchesLocal": true
+    },
+    {
+      "path": "/api/v1/analytics?from=2026-10-01&to=2026-10-20",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/analytics/cash/details?from=2026-10-01&to=2026-10-20",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/analytics/cash/export?from=2026-10-01&to=2026-10-20",
+      "status": 401
+    }
+  ],
+  "databaseMigration": "none; existing V25 validated",
+  "acceptance": {
+    "p6Api": 26,
+    "p7aApi": 30,
+    "p7aBrowser": 6,
+    "frontend": 21,
+    "javaRun": 60,
+    "javaSkipped": 1
+  }
+}

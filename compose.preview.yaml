@@ -1,0 +1,155 @@
+name: binbin-crm-preview
+
+services:
+  prepare:
+    image: binbin-crm-preview-tools:local
+    build:
+      context: .
+      dockerfile: Dockerfile.preview-tools
+    command: [state]
+    network_mode: none
+    secrets: [postgres_password, runtime_password, migrator_password, login_password, integration_key, s3_access_key, s3_secret_key, postgres_key, storage_key]
+    configs:
+      - source: postgres_certificate
+        target: /config/postgres.crt
+      - source: storage_certificate
+        target: /config/storage.crt
+    volumes:
+      - postgres_config:/state/postgres
+      - app_config:/state/app
+      - storage_config:/state/storage
+      - storage_data:/state/storage-data
+
+  postgres:
+    image: postgres:18
+    depends_on:
+      prepare:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_DB: crm_preview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /etc/crm-preview/postgres_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    command: [postgres, -c, ssl=on, -c, ssl_cert_file=/etc/crm-preview/server.crt, -c, ssl_key_file=/etc/crm-preview/server.key]
+    configs:
+      - source: root_certificate
+        target: /opt/crm-preview-ca.crt
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - postgres_config:/etc/crm-preview:ro
+      - ./server/ops/preview/init_postgres.sh:/docker-entrypoint-initdb.d/10-crm-roles.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d crm_preview]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    networks: [backend]
+
+  storage:
+    image: binbin-crm-preview-storage:local
+    build:
+      context: .
+      dockerfile: Dockerfile.preview-storage
+    depends_on:
+      prepare:
+        condition: service_completed_successfully
+    command: [server, /data, --address, ':9000', --certs-dir, /etc/minio]
+    environment:
+      MINIO_ROOT_USER_FILE: /etc/minio/s3_access_key
+      MINIO_ROOT_PASSWORD_FILE: /etc/minio/s3_secret_key
+      MINIO_BROWSER: 'off'
+    volumes:
+      - storage_config:/etc/minio:ro
+      - storage_data:/data
+    networks:
+      backend:
+        aliases: [crm-preview.storage]
+
+  storage-init:
+    image: binbin-crm-preview-tools:local
+    command: [bucket]
+    depends_on:
+      storage:
+        condition: service_started
+    configs:
+      - source: root_certificate
+        target: /config/root-ca.crt
+    volumes:
+      - storage_config:/state/storage:ro
+    networks: [backend]
+
+  app:
+    image: binbin-crm-preview-app:local
+    build:
+      context: .
+      dockerfile: Dockerfile.preview
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage-init:
+        condition: service_completed_successfully
+    environment:
+      CRM_DB_URL: jdbc:postgresql://postgres:5432/crm_preview?sslmode=verify-full&sslrootcert=/opt/crm/preview-ca.crt
+      CRM_DB_USER: crm_runtime
+      CRM_MIGRATION_DB_USER: crm_migrator
+      CRM_STAGE: test
+      CRM_SEED_ENABLED: 'true'
+      CRM_ISOLATED_ACCEPTANCE: ${CRM_PREVIEW_ISOLATED:-false}
+      CRM_COOKIE_SECURE: ${CRM_PREVIEW_COOKIE_SECURE:-false}
+      CRM_ALLOWED_ORIGINS: ${CRM_PREVIEW_BASE_URL:-http://127.0.0.1:8080}
+      CRM_PUBLIC_BASE_URL: ${CRM_PREVIEW_BASE_URL:-http://127.0.0.1:8080}
+      CRM_S3_ENDPOINT: https://storage:9000
+      CRM_S3_BUCKET: crm-preview
+      CRM_S3_REGION: us-east-1
+      CRM_S3_PATH_STYLE: 'true'
+      CRM_OBJECT_PREFIX: preview
+      CRM_AI_ENABLED: 'false'
+    configs:
+      - source: root_certificate
+        target: /opt/crm/preview-ca.crt
+    volumes:
+      - app_config:/run/crm-preview:ro
+    ports:
+      - 127.0.0.1:${CRM_PREVIEW_PORT:-8080}:8080
+    mem_limit: 1g
+    networks: [backend, outbound]
+
+networks:
+  backend:
+    internal: true
+  outbound: {}
+
+volumes:
+  postgres_data: {}
+  postgres_config: {}
+  app_config: {}
+  storage_config: {}
+  storage_data: {}
+
+configs:
+  root_certificate:
+    file: ./.crm-preview/root-ca.crt
+  postgres_certificate:
+    file: ./.crm-preview/postgres.crt
+  storage_certificate:
+    file: ./.crm-preview/storage.crt
+
+secrets:
+  postgres_password:
+    file: ./.crm-preview/secrets/postgres_password
+  runtime_password:
+    file: ./.crm-preview/secrets/runtime_password
+  migrator_password:
+    file: ./.crm-preview/secrets/migrator_password
+  login_password:
+    file: ./.crm-preview/secrets/login_password
+  integration_key:
+    file: ./.crm-preview/secrets/integration_key
+  s3_access_key:
+    file: ./.crm-preview/secrets/s3_access_key
+  s3_secret_key:
+    file: ./.crm-preview/secrets/s3_secret_key
+  postgres_key:
+    file: ./.crm-preview/secrets/postgres_key
+  storage_key:
+    file: ./.crm-preview/secrets/storage_key

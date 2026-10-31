@@ -1,0 +1,25 @@
+{
+  "archiveSha256": "eb53f670ee9edfb3836907288a6a7eef05e600bd6f325c1685c29d5ec560c64a",
+  "archiveBytes": 790056,
+  "releases": {
+    "CRM_RELEASE_": {
+      "declaredChunks": 20,
+      "storedNumberedKeys": 35,
+      "encodedBytes": 588036,
+      "decodedBytes": 441025,
+      "empty": false,
+      "sha256": "602c6d8a26cde7c99f4852f2370678e3979c0944197d1ed1b4611215d2619738",
+      "members": 136,
+      "pomVersion": "0.20.0"
+    },
+    "CRM_P7_RELEASE_": {
+      "declaredChunks": 22,
+      "storedNumberedKeys": 22,
+      "encodedBytes": 0,
+      "decodedBytes": 0,
+      "empty": true
+    }
+  },
+  "fragmentCount": 57,
+  "oldCloudVariablesDeleted": false
+}

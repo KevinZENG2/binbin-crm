@@ -1,0 +1,12 @@
+{
+  "stage": "P7-A UI",
+  "passed": 6,
+  "checks": [
+    "Login and left navigation open real analytics with a quarterly filter",
+    "Order drilldown contains real fixture and stays centered within desktop viewport",
+    "Dialog table header meets text contrast threshold",
+    "Product chart supports keyboard-accessible drilldown",
+    "Mobile analytics and drilldown fit the viewport with internal table scrolling",
+    "No browser runtime exceptions"
+  ]
+}

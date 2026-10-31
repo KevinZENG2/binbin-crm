@@ -1,0 +1,4 @@
+services:
+  app:
+    environment:
+      CRM_PREVIEW_EPHEMERAL_UNTIL: ${CRM_REVIEW_EXPIRES_AT:?Explicit review deadline required}

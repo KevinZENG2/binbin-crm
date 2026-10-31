@@ -1,0 +1,176 @@
+{
+  "releaseVersion": "0.21.0",
+  "environment": "crm-test",
+  "date": "2026-10-21",
+  "applicationCodeCommit": "a2fa0fc1035c8b3658e1cc5f96aadc9612791838",
+  "releasePackageCommit": "529bd6b656fac5db97a31d691f71e16e25364065",
+  "startupFixCommit": "65f4cdc9ddcb52d247950f7dd9fdee1d5a256adb",
+  "deployment": {
+    "id": "51ded2ae-0ef6-4d81-8e8b-031673febe3d",
+    "status": "SUCCESS",
+    "databaseMigrations": 28,
+    "privateReleaseSha256": "0a7af42f6eec196392614ba04fe7f3bcd0029906d94978c9a85d3547c314f947",
+    "privateReleaseAuthenticatedReadback": true,
+    "expiredBootstrapUrlCleared": true
+  },
+  "continuousIntegration": {
+    "appRun": 39399821273,
+    "packagingRun": 39401520257,
+    "startupFixRun": 39528195888,
+    "conclusion": "success",
+    "frontend": 21,
+    "java": {
+      "total": 60,
+      "passed": 59,
+      "skipped": 1
+    },
+    "p6Api": 26,
+    "p7aApi": 30,
+    "p7Api": 50,
+    "p7aBrowser": 6,
+    "p7Browser": 11,
+    "backupUnit": 17
+  },
+  "publicVerification": {
+    "checkedAt": "2026-10-21T01:36:23.925247+00:00",
+    "checks": [
+      {
+        "path": "/api/v1/health",
+        "status": 200,
+        "passed": true,
+        "health": {
+          "backend": "Java 21 / Spring Boot",
+          "database": "PostgreSQL",
+          "status": "UP",
+          "version": "0.21.0"
+        }
+      },
+      {
+        "path": "/?account=owner",
+        "status": 200,
+        "passed": true,
+        "sha256": "4a5f816695db7a0bef09027c3f1602510106719fca0a4f7762ff4ae592262b65"
+      },
+      {
+        "path": "/?account=platform-operator",
+        "status": 200,
+        "passed": true,
+        "sha256": "4a5f816695db7a0bef09027c3f1602510106719fca0a4f7762ff4ae592262b65"
+      },
+      {
+        "path": "/?mode=demo",
+        "status": 200,
+        "passed": true,
+        "sha256": "4a5f816695db7a0bef09027c3f1602510106719fca0a4f7762ff4ae592262b65"
+      },
+      {
+        "path": "/assets/index-DLY8KfaX.js",
+        "status": 200,
+        "passed": true,
+        "sha256": "2f8398e24697b700f8e1299019ba737f10389d8599173404f7e9d6eb0b314394"
+      },
+      {
+        "path": "/assets/index-DuR6z1WB.css",
+        "status": 200,
+        "passed": true,
+        "sha256": "7436bb1aadb5bbce703dc25437c971984886de242aaa3e12c944a2a58247b391"
+      },
+      {
+        "path": "/api/v1/automation",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "path": "/api/v1/workspace/catalog",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "path": "/api/v1/migrations/templates",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "path": "/api/v1/pilot/readiness",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "path": "/api/v1/platform/p7/plans",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "path": "/api/v1/workspace/notices",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "path": "/api/v1/workspace/public-forms",
+        "status": 401,
+        "passed": true
+      },
+      {
+        "path": "/api/v1/public-intake/invalid-release-check-token",
+        "status": 404,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "authenticatedBrowser": {
+    "account": "owner",
+    "tenant": "星澜科技 · 测试企业",
+    "mode": "read-only UI inspection; no business records created",
+    "checks": [
+      "P7 left navigation visible after refreshing the old page",
+      "Automation overview loads, scheduler enabled, create dialog opens and closes",
+      "Seven migration templates visible",
+      "Pilot readiness loads and displays 6/14 ready, with SMTP and actual trial still incomplete",
+      "Business workspace loads and lists all 14 supported object types"
+    ]
+  },
+  "backupDeployment": "8a5fe452-25a2-4731-b8dd-9960dbb47182",
+  "backup": {
+    "jobId": "5856871e-3fb7-47df-8797-5cca1a4485b3",
+    "status": "SUCCESS",
+    "encryptedBytes": 545346,
+    "encryptedSha256": "9d0ef5733f2594e3455eea0b717fb98b1d5114e5f646bb1c8c41d683efd1ac46",
+    "s3Readback": true,
+    "authenticatedDecryption": true,
+    "tamperRejected": true,
+    "attachmentFiles": 0,
+    "restore": {
+      "target": "new disposable PostgreSQL 18 database",
+      "tableCount": 127,
+      "rowCount": 12108,
+      "rlsTables": 103,
+      "migrations": 28,
+      "runtimeTenantBoundary": true,
+      "commercialContentVerified": true,
+      "commercialTablesVerified": 94,
+      "removedAfterCheck": true,
+      "attachmentFilesVerified": 0
+    }
+  },
+  "retention": {
+    "jobId": "dee233f0-e600-487b-adea-012f633174c9",
+    "days": 30,
+    "minimumSuccessful": 3,
+    "availableCopies": 10,
+    "expiredDeleted": 0,
+    "expiredAlreadyMissing": 0,
+    "auditRecordsRetained": true
+  },
+  "cron": {
+    "expression": "0 18 * * *",
+    "timeZone": "UTC",
+    "userTime": "Asia/Shanghai 02:00 daily",
+    "preserved": true
+  },
+  "externalAcceptancePending": [
+    "Formal SMTP parameters and actual delivery verification",
+    "Customer enterprise pilot, business rehearsal and sign-off"
+  ],
+  "controlPlaneNote": "Historical image-alias patch a19b69c0-2399-445b-b92e-757477a50dcb still reported APPLYING, while actual pinned-image deployment is SUCCESS and live health/assets/API/backup checks pass. Do not re-accept the historical patch; platform-side cleanup remains."
+}
