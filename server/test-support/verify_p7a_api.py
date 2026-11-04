@@ -35,15 +35,24 @@ check('Confirmed order totals and historical net cash are separate',panels['orde
 check('Product quantity and estimated margin use order snapshots',int(panels['products']['quantity'])==10 and int(panels['products']['costCents'])==50000 and int(panels['products']['amountCents'])==100000)
 check('Reopened service cycles omit previous cycle satisfaction',panels['service']['feedbackCount']==0 and panels['service']['satisfaction'] is None)
 check('Commission lock and adjustments remain separate',int(panels['commissions']['amountCents'])==2000 and int(panels['commissions']['auxCents'])==100)
+receipt_dates=[]
 for module,p in panels.items():
  d=owner.req('/analytics/'+module+'/details?'+q+'&pageSize=100')
+ if module=='cash':
+  receipt_dates=[datetime.date.fromisoformat(x['eventDate']) for x in d['items'] if x['customerId']==uid(301) and x['state']=='RECEIPT']
  check('Summary and drilldown agree: '+module,d['total']==p['count'] and sum(int(x['amountCents']) for x in d['items'])==int(p['amountCents']))
  for state in p['states']:
   detail=owner.req('/analytics/'+module+'/details?'+q+'&'+urllib.parse.urlencode({'dimension':'state','value':state['key'],'pageSize':100}))
   assert detail['total']==state['count']
 check('Every chart state drills into its exact authorized population')
 rfm=owner.req('/analytics/rfm/details?'+q+'&pageSize=100')['items'];customer=next(x for x in rfm if x['id']==uid(301))
-check('RFM uses net cash, confirmed positive receipt frequency and date recency',int(customer['amountCents'])==60000 and customer['frequency']==2 and customer['recencyDays']>=0 and customer['state']=='ACTIVE')
+# The two positive P6 receipts are dated in the previous calendar month.
+# Their age at the report cutoff can fall on either side of the 30-day boundary.
+assert len(receipt_dates)==2, 'Expected both confirmed P6 receipt events'
+age=(now-max(receipt_dates)).days
+assert 0<=age<=90, 'Previous-month receipts must be within the active or core window'
+expected_state='CORE' if age<=30 else 'ACTIVE'
+check('RFM uses net cash, confirmed positive receipt frequency and date recency',int(customer['amountCents'])==60000 and customer['frequency']==2 and customer['recencyDays']==age and customer['state']==expected_state)
 for p in alice.req('/analytics?'+q)['panels']:
  if p['id'] in ('products','orders'):assert p['costVisible'] is False and p['costCents'] is None
  if p['id']=='commissions':assert p['count']==1
