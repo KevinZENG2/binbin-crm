@@ -1,4 +1,4 @@
-# 彬彬 CRM · P1-B 联系人与线索交付
+# 金拓CRM · P1-B 联系人与线索交付
 
 版本 v0.4，2026-10-13（上海时间）。保留 Java 21 / Spring Boot、Vue 3 / TypeScript 和原生 PostgreSQL，继续在现有云预览开发。
 

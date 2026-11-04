@@ -1,4 +1,4 @@
-# 彬彬 CRM · P1-C 商机、跟进与待办
+# 金拓CRM · P1-C 商机、跟进与待办
 
 版本 v0.5，2026-10-13（上海时间）。在现有 Java 21 / Spring Boot、Vue 3 / TypeScript 与原生 PostgreSQL 基线上开发，继续使用云预览。
 

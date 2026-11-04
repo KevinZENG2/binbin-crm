@@ -119,7 +119,7 @@ onMounted(async()=>{try{recoveryEnabled.value=(await api<{enabled:boolean}>('/au
 <template>
  <div class="live-shell" :class="{ 'workspace-active': !!session&&!resetToken&&!forgot, 'ai-open': aiPaneOpen&&!!session?.p4Access?.aiUse }">
   <header class="live-header">
-   <a class="brand" href="?mode=live"><span class="brand-mark"><Icon name="layers" :size="23"/></span><span><strong>彬彬 CRM</strong><small>企业客户经营平台</small></span></a>
+   <a class="brand" href="?mode=live"><span class="brand-mark"><Icon name="layers" :size="23"/></span><span><strong>{{packageInfo.productName}}</strong><small>企业客户经营平台</small></span></a>
    <div v-if="session&&!resetToken&&!forgot" class="live-header-page">
     <button class="icon-button live-menu-toggle" aria-label="打开业务导航" :aria-expanded="sidebarOpen" @click="sidebarOpen=!sidebarOpen"><Icon name="menu"/></button>
     <div><small>{{session.user.platformOperator&&platformMode?'平台运营':'企业工作区'}} / {{currentTitle}}</small><strong>{{currentTitle}}</strong></div>

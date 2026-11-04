@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { productName } from '../package.json';
 import { computed, onMounted, reactive, ref } from 'vue';
 import Icon from './Icon.vue';
 type Session={account:{id:string;email:string;displayName:string;mustChangePassword:boolean};tenant:{code:string;name:string;brandName:string;supportEmail:string};csrfToken:string;expiresAt:string};
 const session=ref<Session|null>(null),busy=ref(false),error=ref(''),notice=ref(''),section=ref('summary'),items=ref<any[]>([]),selected=ref<any|null>(null),summary=ref<any|null>(null),ticketTypes=ref<any[]>([]);
 const credentials=reactive({tenantCode:'test-1',email:'',password:''});const passwords=reactive({oldPassword:'',newPassword:'',confirm:''});
 const ticket=reactive({title:'',description:'',priority:'NORMAL',typeCode:'GENERAL'});const newTicket=ref(false),reply=ref('');
-const brand=computed(()=>session.value?.tenant.brandName||session.value?.tenant.name||'客户服务门户');
+const brand=computed(()=>session.value?.tenant.brandName||session.value?.tenant.name||productName);
 async function api<T>(path:string,method='GET',body?:unknown,headers:Record<string,string>={}):Promise<T>{const r=await fetch('/api/v1/portal'+path,{method,credentials:'same-origin',headers:{...(body===undefined||body instanceof FormData?{}:{'Content-Type':'application/json'}),...(session.value?{'X-CSRF-Token':session.value.csrfToken}:{}),...headers},...(body===undefined?{}:{body:body instanceof FormData?body:JSON.stringify(body)})});const value=r.status===204?null:await r.json().catch(()=>({message:'门户服务暂未就绪'}));if(!r.ok){if(r.status===401)session.value=null;throw new Error(value?.message||'操作未完成');}return value as T;}
 async function run(fn:()=>Promise<void>){if(busy.value)return;busy.value=true;error.value='';notice.value='';try{await fn();}catch(e){error.value=e instanceof Error?e.message:'操作未完成';}finally{busy.value=false;}}
 async function login(){await run(async()=>{session.value=await api<Session>('/auth/login','POST',credentials);credentials.password='';if(!session.value.account.mustChangePassword)await navigate('summary');});}

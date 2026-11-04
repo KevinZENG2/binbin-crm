@@ -1,5 +1,6 @@
 {
   "name": "binbin-crm-preview",
+  "productName": "金拓CRM",
   "private": true,
   "version": "0.23.0",
   "type": "module",
