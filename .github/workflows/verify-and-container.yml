@@ -16,7 +16,17 @@ concurrency:
   cancel-in-progress: true
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: acceptance-only-root-no-real-data
+          POSTGRES_DB: crm_acceptance
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d crm_acceptance"
+          --health-interval 5s --health-timeout 5s --health-retries 20
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -35,6 +45,167 @@ jobs:
         env:
           VITE_RUNTIME_MODE: live
       - run: mvn -f server/pom.xml -B -ntp verify
+      - name: Verify manual recovery compatibility and target boundaries
+        run: python3 -m unittest discover -s server/test-support -p test_manual_restore.py
+      - name: Verify bounded public review origins and expiry
+        run: python3 -m unittest discover -s server/test-support -p test_review_preview.py
+      - name: Prepare disposable P6 database roles
+        env:
+          PGPASSWORD: acceptance-only-root-no-real-data
+        run: |
+          psql -h 127.0.0.1 -U postgres -d crm_acceptance -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE crm_runtime LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD 'acceptance-only-runtime';
+          CREATE ROLE crm_migrator LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD 'acceptance-only-migrator';
+          REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+          GRANT USAGE,CREATE ON SCHEMA public TO crm_migrator;
+          GRANT USAGE ON SCHEMA public TO crm_runtime;
+          SQL
+      - name: Start isolated API with synthetic data
+        env:
+          CRM_DB_URL: jdbc:postgresql://127.0.0.1:5432/crm_acceptance?sslmode=disable
+          CRM_DB_PASSWORD: acceptance-only-runtime
+          CRM_MIGRATION_DB_PASSWORD: acceptance-only-migrator
+          CRM_SEED_ENABLED: 'true'
+          CRM_SEED_PASSWORD: acceptance-only-account-2026
+          CRM_COOKIE_SECURE: 'false'
+          CRM_STAGE: test
+          SPRING_PROFILES_ACTIVE: acceptance
+          CRM_AI_ENABLED: 'true'
+          CRM_AI_DEEPSEEK_API_KEY: crm-acceptance-only
+          CRM_INTEGRATION_ENCRYPTION_KEY: '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'
+        run: |
+          python3 server/test-support/ai_provider_stub.py > /tmp/crm-ai-stub.log 2>&1 &
+          java -jar server/target/crm-server-0.23.0.jar --spring.web.resources.static-locations=file:"$PWD"/dist/ > /tmp/crm-p6-api.log 2>&1 &
+          crm_p6_api_pid=$!
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health > /dev/null; then exit 0; fi
+            if ! kill -0 "$crm_p6_api_pid" 2>/dev/null; then tail -100 /tmp/crm-p6-api.log; exit 1; fi
+            sleep 2
+          done
+          tail -100 /tmp/crm-p6-api.log
+          exit 1
+      - name: Prepare independent reviewer fixture
+        env:
+          PGPASSWORD: acceptance-only-root-no-real-data
+        run: |
+          psql -h 127.0.0.1 -U postgres -d crm_acceptance -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO sys_member_role(tenant_id,member_id,role_code) VALUES('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000202','SALES_MANAGER');
+          SQL
+      - name: Verify complete P6 business workflows and boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p6-acceptance.json
+        run: python3 server/test-support/verify_p6_api.py
+      - name: Verify P7-A analytics and permission boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p7a-acceptance.json
+        run: python3 server/test-support/verify_p7a_api.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7a-acceptance
+          path: p7a-acceptance.json
+      - name: Verify P7 automation, workspace, migration and pilot boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p7-acceptance.json
+        run: python3 server/test-support/verify_p7_api.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-acceptance
+          path: p7-acceptance.json
+      - name: Verify P8-A provider, confirmation, budget and isolation boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p8a-acceptance.json
+        run: python3 server/test-support/verify_p8a_api.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p8a-acceptance
+          path: p8a-acceptance.json
+      - name: Verify P8 scenarios, controlled writes, quality and rollout boundaries
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_ACCEPTANCE_RESULT: p8-complete-acceptance.json
+        run: python3 server/test-support/verify_p8_complete_api.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p8-complete-acceptance
+          path: p8-complete-acceptance.json
+      - name: Install isolated browser test tools
+        run: |
+          npm install --prefix /tmp/crm-p7-ui --no-audit --no-fund playwright@1.56.1
+          /tmp/crm-p7-ui/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify P7-A desktop and mobile interactions
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_PLAYWRIGHT_MODULE: /tmp/crm-p7-ui/node_modules/playwright
+        run: node server/test-support/verify_p7a_ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7a-ui
+          path: p7a-ui/
+      - name: Verify P7 workspace desktop, mobile and anonymous form interactions
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_PLAYWRIGHT_MODULE: /tmp/crm-p7-ui/node_modules/playwright
+        run: node server/test-support/verify_p7_ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p7-ui
+          path: p7-ui/
+      - name: Verify P8-A AI administration and confirmation UI
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_PLAYWRIGHT_MODULE: /tmp/crm-p7-ui/node_modules/playwright
+        run: node server/test-support/verify_p8a_ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p8a-ui
+          path: p8a-ui/
+      - name: Verify private release transport without external credentials
+        run: python3 -m unittest discover -s server/test-support -p test_release_transport.py
+      - name: Verify P8 editable AI drafts, human confirmation and quality UI
+        env:
+          CRM_ISOLATED_ACCEPTANCE: 'true'
+          CRM_TEST_PASSWORD: acceptance-only-account-2026
+          CRM_PLAYWRIGHT_MODULE: /tmp/crm-p7-ui/node_modules/playwright
+        run: node server/test-support/verify_p8_complete_ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p8-complete-ui
+          path: p8-complete-ui/
+      - name: Package verified private release
+        run: python3 server/ops/package_release.py /tmp/crm-release.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p7-release
+          path: /tmp/crm-release.tgz
+          retention-days: 7
+      - name: P6 API diagnostic log
+        if: failure()
+        run: tail -120 /tmp/crm-p6-api.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p6-acceptance
+          path: p6-acceptance.json
       - run: sudo apt-get update && sudo apt-get install -y python3-boto3 python3-psycopg2 python3-cryptography
       - run: python3 -m unittest discover -s server/test-support -p test_backup_operations.py
       - uses: docker/setup-buildx-action@v4
@@ -51,7 +222,7 @@ jobs:
   publish:
     if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write

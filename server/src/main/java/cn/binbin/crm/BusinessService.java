@@ -15,10 +15,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class BusinessService {
     public record ContactCreate(@NotNull UUID customerId,@NotBlank @Size(max=100) String name,@Size(max=100) String jobTitle,
-        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description) {}
+        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description,
+        @Pattern(regexp="DECISION_MAKER|INFLUENCER|USER|GATEKEEPER|OTHER") String decisionRole,@Pattern(regexp="HIGH|MEDIUM|LOW|UNKNOWN") String influence,
+        @Pattern(regexp="PHONE|EMAIL|WECHAT|IN_PERSON|ANY") String contactPreference) {
+        public ContactCreate(UUID customerId,String name,String jobTitle,String phone,String email,boolean primary,String description){this(customerId,name,jobTitle,phone,email,primary,description,"OTHER","UNKNOWN","ANY");}
+    }
     public record ContactEdit(@NotNull @Min(0) Long expectedVersion,@NotNull UUID customerId,@NotBlank @Size(max=100) String name,@Size(max=100) String jobTitle,
-        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description) {}
-    public record Contact(UUID id,UUID customerId,String customerName,String name,String jobTitle,String phone,String email,boolean primary,String description,long version,Instant updatedAt,boolean canWrite,boolean canRelink) {}
+        @Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,@Email @Size(max=254) String email,boolean primary,@Size(max=4000) String description,
+        @Pattern(regexp="DECISION_MAKER|INFLUENCER|USER|GATEKEEPER|OTHER") String decisionRole,@Pattern(regexp="HIGH|MEDIUM|LOW|UNKNOWN") String influence,
+        @Pattern(regexp="PHONE|EMAIL|WECHAT|IN_PERSON|ANY") String contactPreference) {}
+    public record Contact(UUID id,UUID customerId,String customerName,String name,String jobTitle,String phone,String email,boolean primary,String description,long version,Instant updatedAt,boolean canWrite,boolean canRelink,String decisionRole,String influence,String contactPreference) {}
     public record LeadCreate(@NotBlank @Size(max=100) String name,@NotBlank @Size(max=200) String companyName,@NotBlank @Size(max=80) String industry,
         @NotBlank @Size(max=80) String source,@Size(max=100) String region,@Size(max=100) String jobTitle,@Size(max=40) @Pattern(regexp="[0-9+().\\-\\s]*") String phone,
         @Email @Size(max=254) String email,@Size(max=4000) String description,@NotNull UUID ownerMemberId) {}
@@ -34,8 +40,10 @@ public class BusinessService {
     private final TransactionTemplate tx;
     private final AuthService auth;
     private final CustomerService customers;
+    private final SalesFoundationService foundation;
+    private final ResourcePoolService resourcePools;
     private final ObjectMapper json;
-    public BusinessService(NamedParameterJdbcTemplate db,TransactionTemplate tx,AuthService auth,CustomerService customers,ObjectMapper json){this.db=db;this.tx=tx;this.auth=auth;this.customers=customers;this.json=json;}
+    public BusinessService(NamedParameterJdbcTemplate db,TransactionTemplate tx,AuthService auth,CustomerService customers,SalesFoundationService foundation,ResourcePoolService resourcePools,ObjectMapper json){this.db=db;this.tx=tx;this.auth=auth;this.customers=customers;this.foundation=foundation;this.resourcePools=resourcePools;this.json=json;}
     private static String text(String value){return value==null?"":value.strip();}
     private <T> T scoped(AuthService.Session s,boolean contacts,boolean write,Function<AuthService.Actor,T> fn){
         return tx.execute(status->{
@@ -60,7 +68,7 @@ public class BusinessService {
     }
     private static final String CONTACT_FROM=" FROM crm_contact ct JOIN crm_customer c ON c.tenant_id=ct.tenant_id AND c.id=ct.customer_id ";
     private static final String CONTACT_SELECT="SELECT ct.*,c.customer_name,(:contactWriter AND "+CustomerService.WRITE+") AS can_write,NOT EXISTS(SELECT 1 FROM crm_lead linked WHERE linked.tenant_id=ct.tenant_id AND linked.converted_contact_id=ct.id) AS can_relink"+CONTACT_FROM;
-    private Contact contactRow(ResultSet r)throws SQLException{return new Contact(r.getObject("id",UUID.class),r.getObject("customer_id",UUID.class),r.getString("customer_name"),r.getString("full_name"),r.getString("job_title"),r.getString("phone"),r.getString("email"),r.getBoolean("is_primary"),r.getString("description"),r.getLong("version"),r.getTimestamp("updated_at").toInstant(),r.getBoolean("can_write"),r.getBoolean("can_relink"));}
+    private Contact contactRow(ResultSet r)throws SQLException{return new Contact(r.getObject("id",UUID.class),r.getObject("customer_id",UUID.class),r.getString("customer_name"),r.getString("full_name"),r.getString("job_title"),r.getString("phone"),r.getString("email"),r.getBoolean("is_primary"),r.getString("description"),r.getLong("version"),r.getTimestamp("updated_at").toInstant(),r.getBoolean("can_write"),r.getBoolean("can_relink"),r.getString("decision_role"),r.getString("influence"),r.getString("contact_preference"));}
     Contact contact(AuthService.Actor a,UUID id){var p=params(a);p.put("id",id);var found=db.query(CONTACT_SELECT+"WHERE "+CustomerService.READ+" AND ct.id=:id",p,(r,i)->contactRow(r));if(found.isEmpty())throw ApiError.missing();return found.getFirst();}
     private static void page(int page,int size,String q){if(page<1||page>100000||size<1||size>100||q.length()>100)throw ApiError.bad("分页或搜索条件无效");}
     public Page<Contact> contacts(AuthService.Session s,int page,int size,String q,UUID customerId){page(page,size,q);return scoped(s,true,false,a->{
@@ -73,12 +81,12 @@ public class BusinessService {
     public Contact contact(AuthService.Session s,UUID id){return scoped(s,true,false,a->contact(a,id));}
     private void customerWrite(AuthService.Actor a,UUID id){if(!customers.get(a,id).canWrite())throw ApiError.forbidden("无权编辑该客户及其联系人");}
     private void primary(Map<String,Object> p){db.update("UPDATE crm_contact SET is_primary=false,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND customer_id=:customer AND is_primary AND id<>:id",p);}
-    private Map<String,Object> contactParams(AuthService.Actor a,UUID id,ContactCreate c){var p=params(a);p.put("id",id);p.put("customer",c.customerId());p.put("name",text(c.name()));p.put("title",text(c.jobTitle()));p.put("phone",text(c.phone()));p.put("email",text(c.email()));p.put("primary",c.primary());p.put("description",text(c.description()));return p;}
-    private ContactCreate normalize(ContactCreate c){return new ContactCreate(c.customerId(),text(c.name()),text(c.jobTitle()),text(c.phone()),text(c.email()),c.primary(),text(c.description()));}
+    private Map<String,Object> contactParams(AuthService.Actor a,UUID id,ContactCreate c){var p=params(a);p.put("id",id);p.put("customer",c.customerId());p.put("name",text(c.name()));p.put("title",text(c.jobTitle()));p.put("phone",text(c.phone()));p.put("email",text(c.email()));p.put("primary",c.primary());p.put("description",text(c.description()));p.put("decision",c.decisionRole());p.put("influence",c.influence());p.put("preference",c.contactPreference());return p;}
+    private ContactCreate normalize(ContactCreate c){return new ContactCreate(c.customerId(),text(c.name()),text(c.jobTitle()),text(c.phone()),text(c.email()),c.primary(),text(c.description()),c.decisionRole()==null?"OTHER":c.decisionRole(),c.influence()==null?"UNKNOWN":c.influence(),c.contactPreference()==null?"ANY":c.contactPreference());}
     private UUID insertContact(AuthService.Actor a,ContactCreate c,UUID trace){
         if(!a.businessAccess().contactWrite())throw ApiError.forbidden("当前角色没有联系人写入权限");customerWrite(a,c.customerId());
         UUID id=UUID.randomUUID();var p=contactParams(a,id,c);if(c.primary())primary(p);
-        db.update("INSERT INTO crm_contact(id,tenant_id,customer_id,full_name,job_title,phone,email,is_primary,description) VALUES(:id,:tenant,:customer,:name,:title,:phone,:email,:primary,:description)",p);
+        db.update("INSERT INTO crm_contact(id,tenant_id,customer_id,full_name,job_title,phone,email,is_primary,description,decision_role,influence,contact_preference) VALUES(:id,:tenant,:customer,:name,:title,:phone,:email,:primary,:description,:decision,:influence,:preference)",p);
         audit(a,"CONTACT_CREATED","CONTACT",id,0,trace);return id;
     }
     public Contact createContact(AuthService.Session s,ContactCreate input,String key,UUID trace){var c=normalize(input);return scoped(s,true,true,a->{UUID id=once(a,"contact.create",key,c,()->insertContact(a,c,trace));return contact(a,id);});}
@@ -86,13 +94,13 @@ public class BusinessService {
         var current=contact(a,id);if(!current.canWrite())throw ApiError.forbidden("无权编辑该联系人");
         if(current.version()!=input.expectedVersion())throw ApiError.conflict("联系人已变化，请刷新后再保存");
         if(!current.customerId().equals(input.customerId())&&!current.canRelink())throw ApiError.conflict("线索转换生成的联系人需保留原客户关联");
-        customerWrite(a,input.customerId());var p=contactParams(a,id,new ContactCreate(input.customerId(),input.name(),input.jobTitle(),input.phone(),input.email(),input.primary(),input.description()));p.put("version",input.expectedVersion());
+        customerWrite(a,input.customerId());var p=contactParams(a,id,normalize(new ContactCreate(input.customerId(),input.name(),input.jobTitle(),input.phone(),input.email(),input.primary(),input.description(),input.decisionRole(),input.influence(),input.contactPreference())));p.put("version",input.expectedVersion());
         if(input.primary())primary(p);
-        int changed=db.update("UPDATE crm_contact SET customer_id=:customer,full_name=:name,job_title=:title,phone=:phone,email=:email,is_primary=:primary,description=:description,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version",p);
+        int changed=db.update("UPDATE crm_contact SET customer_id=:customer,full_name=:name,job_title=:title,phone=:phone,email=:email,is_primary=:primary,description=:description,decision_role=:decision,influence=:influence,contact_preference=:preference,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version",p);
         if(changed!=1)throw ApiError.conflict("联系人已变化，请刷新后再保存");audit(a,"CONTACT_UPDATED","CONTACT",id,input.expectedVersion()+1,trace);return contact(a,id);
     });}
     private static final String LEAD_DEPARTMENT="EXISTS(SELECT 1 FROM sys_tenant_member lm WHERE lm.tenant_id=l.tenant_id AND lm.id=l.owner_member_id AND lm.department_id=:department)";
-    static final String LEAD_READ="l.tenant_id=:tenant AND (:leadReadAll OR (:leadReadDepartment AND "+LEAD_DEPARTMENT+") OR l.owner_member_id=:member)";
+    static final String LEAD_READ="l.tenant_id=:tenant AND NOT l.in_pool AND (:leadReadAll OR (:leadReadDepartment AND "+LEAD_DEPARTMENT+") OR l.owner_member_id=:member)";
     private static final String LEAD_WRITE="(:leadWriter AND (:leadWriteAll OR (:leadWriteDepartment AND "+LEAD_DEPARTMENT+") OR l.owner_member_id=:member))";
     private static final String VISIBLE_CUSTOMER="(:customerReader AND c.id IS NOT NULL AND ("+CustomerService.READ+"))";
     private static final String LEAD_FROM=" FROM crm_lead l JOIN sys_tenant_member m ON m.tenant_id=l.tenant_id AND m.id=l.owner_member_id LEFT JOIN crm_customer c ON c.tenant_id=l.tenant_id AND c.id=l.converted_customer_id ";
@@ -113,7 +121,7 @@ public class BusinessService {
     private void owner(Map<String,Object> p){int count=Objects.requireNonNull(db.queryForObject("SELECT count(*) FROM sys_tenant_member m JOIN iam_user u ON u.id=m.user_id WHERE m.tenant_id=:tenant AND m.id=:owner AND m.status='ACTIVE' AND u.status='ACTIVE' AND (:leadWriteAll OR (:leadWriteDepartment AND m.department_id=:department) OR m.id=:member) AND EXISTS(SELECT 1 FROM sys_member_role r JOIN sys_role_policy rp ON rp.tenant_id=r.tenant_id AND rp.role_code=r.role_code WHERE r.tenant_id=m.tenant_id AND r.member_id=m.id AND rp.lead_can_write)",p,Integer.class));if(count!=1)throw ApiError.bad("线索负责人无效或超出权限");}
     private LeadCreate normalize(LeadCreate l){return new LeadCreate(text(l.name()),text(l.companyName()),text(l.industry()),text(l.source()),text(l.region()),text(l.jobTitle()),text(l.phone()),text(l.email()),text(l.description()),l.ownerMemberId());}
     private Map<String,Object> leadParams(AuthService.Actor a,UUID id,LeadCreate l){var p=params(a);p.put("id",id);p.put("name",text(l.name()));p.put("company",text(l.companyName()));p.put("industry",text(l.industry()));p.put("source",text(l.source()));p.put("region",text(l.region()));p.put("title",text(l.jobTitle()));p.put("phone",text(l.phone()));p.put("email",text(l.email()));p.put("description",text(l.description()));p.put("owner",l.ownerMemberId());return p;}
-    public Lead createLead(AuthService.Session s,LeadCreate input,String key,UUID trace){var l=normalize(input);return scoped(s,false,true,a->{UUID id=once(a,"lead.create",key,l,()->{UUID created=UUID.randomUUID();var p=leadParams(a,created,l);owner(p);db.update("INSERT INTO crm_lead(id,tenant_id,contact_name,company_name,industry,source_code,region,job_title,phone,email,description,owner_member_id) VALUES(:id,:tenant,:name,:company,:industry,:source,:region,:title,:phone,:email,:description,:owner)",p);audit(a,"LEAD_CREATED","LEAD",created,0,trace);return created;});return lead(a,id);});}
+    public Lead createLead(AuthService.Session s,LeadCreate input,String key,UUID trace){var l=normalize(input);return scoped(s,false,true,a->{UUID id=once(a,"lead.create",key,l,()->{UUID created=UUID.randomUUID();var p=leadParams(a,created,l);owner(p);foundation.checkCapacity(a,l.ownerMemberId(),"LEAD");db.update("INSERT INTO crm_lead(id,tenant_id,contact_name,company_name,industry,source_code,region,job_title,phone,email,description,owner_member_id) VALUES(:id,:tenant,:name,:company,:industry,:source,:region,:title,:phone,:email,:description,:owner)",p);audit(a,"LEAD_CREATED","LEAD",created,0,trace);return created;});return lead(a,id);});}
     public static void transition(String from,String to){
         var choices=Map.of("NEW",Set.of("NEW","CONTACTED","UNQUALIFIED"),"CONTACTED",Set.of("CONTACTED","QUALIFIED","UNQUALIFIED"),"QUALIFIED",Set.of("QUALIFIED","CONTACTED","UNQUALIFIED"),"UNQUALIFIED",Set.of("UNQUALIFIED","NEW"));
         if(!choices.getOrDefault(from,Set.of()).contains(to))throw ApiError.bad("线索状态转换无效，请按联系和确认流程推进");
@@ -121,9 +129,9 @@ public class BusinessService {
     public Lead editLead(AuthService.Session s,UUID id,LeadEdit input,UUID trace){return scoped(s,false,true,a->{
         var current=lead(a,id);if("CONVERTED".equals(current.status()))throw ApiError.conflict("该线索已转换，原始线索保持只读");if(!current.canWrite())throw ApiError.forbidden("无权编辑该线索");
         if(current.version()!=input.expectedVersion())throw ApiError.conflict("线索已变化，请刷新后再保存");transition(current.status(),input.status());
-        var p=leadParams(a,id,new LeadCreate(input.name(),input.companyName(),input.industry(),input.source(),input.region(),input.jobTitle(),input.phone(),input.email(),input.description(),input.ownerMemberId()));owner(p);p.put("version",input.expectedVersion());p.put("status",input.status());
+        var p=leadParams(a,id,new LeadCreate(input.name(),input.companyName(),input.industry(),input.source(),input.region(),input.jobTitle(),input.phone(),input.email(),input.description(),input.ownerMemberId()));owner(p);if(!current.ownerMemberId().equals(input.ownerMemberId()))foundation.checkCapacity(a,input.ownerMemberId(),"LEAD");p.put("version",input.expectedVersion());p.put("status",input.status());
         int changed=db.update("UPDATE crm_lead SET contact_name=:name,company_name=:company,industry=:industry,source_code=:source,region=:region,job_title=:title,phone=:phone,email=:email,description=:description,owner_member_id=:owner,status=:status,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version AND status<>'CONVERTED'",p);
-        if(changed!=1)throw ApiError.conflict("线索已变化，请刷新后再保存");audit(a,"LEAD_UPDATED","LEAD",id,input.expectedVersion()+1,trace);return lead(a,id);
+        if(changed!=1)throw ApiError.conflict("线索已变化，请刷新后再保存");if(!current.ownerMemberId().equals(input.ownerMemberId()))resourcePools.directTransfer(a,"LEAD",id,current.ownerMemberId(),input.ownerMemberId(),input.expectedVersion()+1,trace);audit(a,"LEAD_UPDATED","LEAD",id,input.expectedVersion()+1,trace);return lead(a,id);
     });}
     public Lead convert(AuthService.Session s,UUID id,Convert input,String key,UUID trace){
         Convert normalized=new Convert(input.expectedVersion(),input.targetCustomerId(),input.customerName()==null?null:text(input.customerName()),input.customerLevel(),input.ownerMemberId(),input.primaryContact());

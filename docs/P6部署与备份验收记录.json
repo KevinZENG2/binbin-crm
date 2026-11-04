@@ -1,0 +1,97 @@
+{
+  "version": "0.19.0",
+  "codeCommit": "2acafa2717775e6294c555be356f9ab9dc029800",
+  "workflowRun": "https://github.com/KevinZENG2/binbin-crm/actions/runs/39225634521",
+  "ciStatus": "success",
+  "businessAcceptanceChecks": 26,
+  "appDeployment": {
+    "id": "64d12490-4e4c-41eb-9f27-fa68eba80323",
+    "status": "SUCCESS"
+  },
+  "release": {
+    "sha256": "536638ff57f6657a35cd98a02fb642a257fbe707b9899f9ae5da49a545a8c906",
+    "bytes": 428403,
+    "chunks": 20,
+    "changedChunks": [
+      "CRM_RELEASE_09",
+      "CRM_RELEASE_10",
+      "CRM_RELEASE_11",
+      "CRM_RELEASE_12",
+      "CRM_RELEASE_13",
+      "CRM_RELEASE_14",
+      "CRM_RELEASE_15",
+      "CRM_RELEASE_16",
+      "CRM_RELEASE_17",
+      "CRM_RELEASE_18",
+      "CRM_RELEASE_19",
+      "CRM_RELEASE_20"
+    ]
+  },
+  "database": {
+    "migrations": 25,
+    "forcedRlsTables": 91
+  },
+  "backup": {
+    "jobId": "27783afc-9d9b-4645-bb53-a72f02b861dd",
+    "status": "SUCCESS",
+    "encryptedBytes": 423608,
+    "encryptedSha256": "2e0f0b75c971de709027a6eee7ff57f40130579eb3dcc93c06593a8f86ef585d",
+    "s3Readback": true,
+    "authenticatedDecryption": true,
+    "tamperRejected": true,
+    "attachmentFiles": 0,
+    "restore": {
+      "target": "new disposable PostgreSQL 18 database",
+      "tableCount": 115,
+      "rowCount": 9114,
+      "rlsTables": 91,
+      "migrations": 25,
+      "runtimeTenantBoundary": true,
+      "commercialContentVerified": true,
+      "commercialTablesVerified": 82,
+      "removedAfterCheck": true,
+      "attachmentFilesVerified": 0
+    }
+  },
+  "retention": {
+    "jobId": "9864842e-acf5-4ca9-9a85-4f8cd0040d59",
+    "days": 30,
+    "minimumSuccessful": 3,
+    "availableCopies": 6,
+    "expiredDeleted": 0,
+    "expiredAlreadyMissing": 0,
+    "auditRecordsRetained": true
+  },
+  "backupCron": {
+    "utc": "0 18 * * *",
+    "asiaShanghai": "每日02:00",
+    "restored": true
+  },
+  "verifiedAt": "2026-10-19T08:55:08.276526+00:00",
+  "onlineChecks": {
+    "health": {
+      "version": "0.19.0",
+      "status": "UP",
+      "database": "PostgreSQL",
+      "backend": "Java 21 / Spring Boot"
+    },
+    "indexMatchesLocal": true,
+    "assets": [
+      {
+        "path": "/assets/index-B4HWoTc-.js",
+        "status": 200,
+        "matchesLocal": true
+      },
+      {
+        "path": "/assets/index-Bgz5hzYh.css",
+        "status": 200,
+        "matchesLocal": true
+      }
+    ],
+    "protectedEndpoints": {
+      "financeInvoices": 401,
+      "performanceTargets": 401,
+      "serviceStatistics": 401
+    }
+  }
+}

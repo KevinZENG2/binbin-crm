@@ -7,3 +7,9 @@ server/test-support
 .env*
 *.log
 __pycache__
+.crm-preview
+
+vm-output/
+
+vm-assets/
+.vm-font-venv/

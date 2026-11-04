@@ -1,4 +1,4 @@
-# 彬彬 CRM · P1-A 开发与云测试交付
+# 金拓CRM · P1-A 开发与云测试交付
 
 版本 v0.3，2026-10-12。Java 21 / Spring Boot、Vue 3 / TypeScript、原生 PostgreSQL。保持用户自有、多企业订阅产品的方向，在独立云测试环境开发。
 

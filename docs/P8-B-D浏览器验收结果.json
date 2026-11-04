@@ -1,0 +1,16 @@
+{
+  "phase": "P8 B-D UI",
+  "passed": 10,
+  "checks": [
+    "Supplier dispatch remains disabled until the human approves the actual preview",
+    "Natural-language lead requests prefill an editable allowlisted business draft",
+    "Generated results distinguish pending human review from supplier dispatch state",
+    "Business save preview shows the edited values before mutation",
+    "Confirmed business save completes once and removes the repeat-save control",
+    "Refreshing an applied result preserves its saved state",
+    "AI assistant and result actions remain inside a 390px mobile viewport",
+    "Enterprise administrator can reach the sensitive-information policy from the left navigation",
+    "Product operator has prompt release controls and an explicitly offline quality evaluation",
+    "No browser runtime exceptions"
+  ]
+}

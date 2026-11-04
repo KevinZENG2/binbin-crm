@@ -3,6 +3,7 @@ package cn.binbin.crm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.*;
 import java.time.*;
+import java.math.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -19,6 +20,9 @@ public class SalesService {
         @NotNull @Min(0) @Max(100000000000L) Long amountCents,@NotNull LocalDate closeDate,@NotBlank @Size(max=1000) String nextAction,@Size(max=4000) String description) {}
     public record StageInput(@NotNull @Min(0) Long expectedVersion,@NotNull @Pattern(regexp="CONTACT|NEEDS|SOLUTION|NEGOTIATION|READY|WON|LOST") String stage,
         @NotBlank @Size(max=1000) String reason,@Size(max=1000) String nextAction,@Min(1) @Max(100000000000L) Long actualAmountCents) {}
+    public record OpportunityLine(@NotNull UUID productId,@NotNull @DecimalMin(value="0",inclusive=false) @DecimalMax("1000000") @Digits(integer=7,fraction=4) BigDecimal quantity,
+        @Min(0) @Max(100000000000L) Long unitPriceCents,@Min(0) @Max(10000) int discountBps,@Size(max=300) String description) {}
+    public record OpportunityLines(@NotNull @Min(0) long expectedVersion,@NotNull @Size(max=100) List<@jakarta.validation.Valid OpportunityLine> lines) {}
     public record TaskCreate(UUID customerId,UUID opportunityId,@NotBlank @Size(max=200) String title,@Size(max=4000) String description,
         @NotNull UUID assigneeMemberId,@NotNull LocalDate dueDate,@NotNull @Pattern(regexp="LOW|NORMAL|HIGH") String priority) {}
     public record TaskEdit(@NotNull @Min(0) Long expectedVersion,@NotBlank @Size(max=200) String title,@Size(max=4000) String description,
@@ -52,7 +56,7 @@ public class SalesService {
     static final String OP_READ="o.tenant_id=:tenant AND :opReader AND :customerReader AND "+CustomerService.READ+" AND "+own("o","owner_member_id","op",false);
     static final String OP_WRITE="(:opWriter AND "+CustomerService.WRITE+" AND "+own("o","owner_member_id","op",true)+")";
     static final String OP_FROM=" FROM crm_opportunity o JOIN crm_customer c ON c.tenant_id=o.tenant_id AND c.id=o.customer_id JOIN sys_tenant_member om ON om.tenant_id=o.tenant_id AND om.id=o.owner_member_id LEFT JOIN crm_lead l ON l.tenant_id=o.tenant_id AND l.id=o.source_lead_id ";
-    private static final String OP_SELECT="SELECT o.id,o.customer_id,c.customer_name,o.title,o.owner_member_id,om.display_name AS owner_name,o.stage,o.amount_cents,o.actual_amount_cents,o.close_date,o.next_action,o.description,o.closed_at,o.version,o.updated_at,(o.stage NOT IN ('WON','LOST') AND "+OP_WRITE+") AS can_write,("+OP_WRITE+") AS can_link,CASE WHEN :leadReader AND "+own("l","owner_member_id","lead",false)+" THEN l.id END AS source_lead_id,CASE WHEN :leadReader AND "+own("l","owner_member_id","lead",false)+" THEN l.company_name END AS source_lead_name"+OP_FROM;
+    private static final String OP_SELECT="SELECT o.id,o.customer_id,c.customer_name,o.title,o.owner_member_id,om.display_name AS owner_name,o.stage,o.amount_cents,o.actual_amount_cents,o.close_date,o.next_action,o.description,o.closed_at,o.version,o.updated_at,(o.stage NOT IN ('WON','LOST') AND "+OP_WRITE+") AS can_write,("+OP_WRITE+") AS can_link,CASE WHEN :leadReader AND "+own("l","owner_member_id","lead",false)+" THEN l.id END AS source_lead_id,CASE WHEN :leadReader AND "+own("l","owner_member_id","lead",false)+" THEN l.company_name END AS source_lead_name,EXISTS(SELECT 1 FROM crm_quote q WHERE q.tenant_id=o.tenant_id AND q.opportunity_id=o.id AND q.status='APPROVED') AS lines_locked,EXISTS(SELECT 1 FROM crm_opportunity_line x WHERE x.tenant_id=o.tenant_id AND x.opportunity_id=o.id) AS has_lines"+OP_FROM;
     private List<Map<String,Object>> rows(String sql,Map<String,?> p){return db.queryForList(sql,p).stream().map(SaasService::view).toList();}
     private Map<String,Object> one(String sql,Map<String,?> p){var rows=rows(sql,p);if(rows.isEmpty())throw ApiError.missing();return rows.getFirst();}
     Map<String,Object> opportunity(AuthService.Actor a,UUID id){var p=params(a);p.put("id",id);return one(OP_SELECT+"WHERE "+OP_READ+" AND o.id=:id",p);}
@@ -60,6 +64,33 @@ public class SalesService {
     private static void page(int page,int size,String q){if(page<1||page>100000||size<1||size>100||q.length()>100)throw ApiError.bad("分页或搜索条件无效");}
     private static void date(LocalDate value){if(value==null||value.isBefore(LocalDate.of(2000,1,1))||value.isAfter(LocalDate.of(2100,12,31)))throw ApiError.bad("日期需在2000至2100年之间");}
     public Map<String,Object> opportunity(AuthService.Session s,UUID id){return scoped(s,"opportunity",false,a->opportunity(a,id));}
+    private static final String LINE_SELECT="SELECT id,line_number,product_id,sku_snapshot,name_snapshot,unit_snapshot,quantity,unit_price_cents,discount_bps,amount_cents,description FROM crm_opportunity_line WHERE tenant_id=:tenant AND opportunity_id=:id ORDER BY line_number";
+    public List<Map<String,Object>> opportunityLines(AuthService.Session s,UUID id){return scoped(s,"opportunity",false,a->{opportunity(a,id);return rows(LINE_SELECT,Map.of("tenant",a.tenant().id(),"id",id));});}
+    public Map<String,Object> saveOpportunityLines(AuthService.Session s,UUID id,OpportunityLines input,UUID trace){return scoped(s,"opportunity",true,a->{
+        opportunityWrite(a,id,false);if(!a.commerceAccess().productRead())throw ApiError.forbidden("维护商机产品明细需要产品目录读取权限");
+        var p=params(a);p.put("id",id);var current=opportunity(a,id);
+        if(((Number)current.get("version")).longValue()!=input.expectedVersion())throw ApiError.conflict("商机版本已变化，请刷新");
+        int approved=db.queryForObject("SELECT count(*) FROM crm_quote WHERE tenant_id=:tenant AND opportunity_id=:id AND status='APPROVED'",p,Integer.class);
+        if(approved>0)throw ApiError.conflict("已有批准报价，商机产品明细已锁定；调整金额请新建商机与报价");
+        if(input.lines().isEmpty()&&STAGES.indexOf((String)current.get("stage"))>=STAGES.indexOf("SOLUTION"))throw ApiError.conflict("方案阶段及之后必须保留产品明细");
+        var prepared=new ArrayList<Map<String,Object>>();var unique=new HashSet<UUID>();long total=0;int number=0;
+        for(var line:input.lines()){
+            if(!unique.add(line.productId()))throw ApiError.bad("同一产品请合并为一行");
+            var product=one("SELECT id,sku,name,unit,price_cents,status FROM crm_product WHERE tenant_id=:tenant AND id=:product",Map.of("tenant",a.tenant().id(),"product",line.productId()));
+            if(!"ACTIVE".equals(product.get("status")))throw ApiError.conflict("停用的产品不能加入商机明细");
+            long price=line.unitPriceCents()==null?((Number)product.get("priceCents")).longValue():line.unitPriceCents();long amount=QuoteAmounts.line(line.quantity(),price,line.discountBps());total=QuoteAmounts.add(total,amount);
+            prepared.add(SaasService.parameters("id",UUID.randomUUID(),"tenant",a.tenant().id(),"opportunity",id,"number",++number,"product",line.productId(),"sku",product.get("sku"),"name",product.get("name"),"unit",product.get("unit"),"quantity",line.quantity(),"price",price,"discount",line.discountBps(),"amount",amount,"description",text(line.description())));
+        }
+        p.put("version",input.expectedVersion());p.put("amount",total);
+        if(db.update("UPDATE crm_opportunity SET amount_cents=:amount,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version AND stage NOT IN ('WON','LOST')",p)!=1)throw ApiError.conflict("商机版本已变化，请刷新");
+        db.update("DELETE FROM crm_opportunity_line WHERE tenant_id=:tenant AND opportunity_id=:id",p);
+        for(var row:prepared)db.update("INSERT INTO crm_opportunity_line(id,tenant_id,opportunity_id,line_number,product_id,sku_snapshot,name_snapshot,unit_snapshot,quantity,unit_price_cents,discount_bps,amount_cents,description) VALUES(:id,:tenant,:opportunity,:number,:product,:sku,:name,:unit,:quantity,:price,:discount,:amount,:description)",row);
+        audit(a,"OPPORTUNITY_LINES_UPDATED","OPPORTUNITY",id,input.expectedVersion()+1,trace);return opportunity(a,id);
+    });}
+    public List<Map<String,Object>> forecast(AuthService.Session s,LocalDate from,LocalDate to){
+        if(from==null||to==null||from.isAfter(to)||from.plusMonths(11).isBefore(to)||from.getDayOfMonth()!=1||to.getDayOfMonth()!=1)throw ApiError.bad("预测月份需按月选择，跨度最多12个月");
+        return scoped(s,"opportunity",false,a->{var p=params(a);p.put("from",from);p.put("until",to.plusMonths(1));return rows("SELECT date_trunc('month',o.close_date)::date AS month,o.stage,coalesce(ps.probability,0) AS probability,count(*) AS total,coalesce(sum(o.amount_cents),0) AS amount_cents,coalesce(sum(round(o.amount_cents::numeric*coalesce(ps.probability,0)/100)),0) AS weighted_cents"+OP_FROM+" LEFT JOIN crm_process_stage ps ON ps.tenant_id=o.tenant_id AND ps.process_type='OPPORTUNITY' AND ps.stage_code=o.stage WHERE "+OP_READ+" AND o.stage NOT IN ('WON','LOST') AND o.close_date>=:from AND o.close_date<:until GROUP BY 1,o.stage,ps.probability ORDER BY 1,o.stage",p);});
+    }
     private String opportunityWhere(){return OP_READ+" AND (:stage='' OR o.stage=:stage) AND (cast(:customer AS uuid) IS NULL OR o.customer_id=:customer) AND (:q='' OR strpos(lower(o.title),lower(:q))>0 OR strpos(lower(c.customer_name),lower(:q))>0)";}
     public BusinessService.Page<Map<String,Object>> opportunities(AuthService.Session s,int page,int size,String q,String stage,UUID customer){page(page,size,q);if(!stage.isEmpty()&&!STAGES.contains(stage))throw ApiError.bad("商机阶段无效");return scoped(s,"opportunity",false,a->{var p=params(a);p.put("stage",stage);p.put("customer",customer);p.put("q",text(q));p.put("limit",size);p.put("offset",((long)page-1)*size);if(customer!=null)customers.get(a,customer);long total=db.queryForObject("SELECT count(*)"+OP_FROM+"WHERE "+opportunityWhere(),p,Long.class);return new BusinessService.Page<>(rows(OP_SELECT+"WHERE "+opportunityWhere()+" ORDER BY o.updated_at DESC,o.id LIMIT :limit OFFSET :offset",p),page,size,total);});}
     public List<Map<String,Object>> board(AuthService.Session s,String q,UUID customer){page(1,12,q);return scoped(s,"opportunity",false,a->{if(customer!=null)customers.get(a,customer);var p=params(a);p.put("customer",customer);p.put("q",text(q));var result=new ArrayList<Map<String,Object>>();for(String stage:STAGES){p.put("stage",stage);var entry=new LinkedHashMap<String,Object>(one("SELECT count(*) AS total,coalesce(sum(o.amount_cents),0) AS amount_cents,coalesce(sum(o.actual_amount_cents),0) AS actual_amount_cents"+OP_FROM+"WHERE "+opportunityWhere(),p));entry.put("stage",stage);entry.put("items",rows(OP_SELECT+"WHERE "+opportunityWhere()+" ORDER BY o.updated_at DESC,o.id LIMIT 12",p));result.add(entry);}return result;});}
@@ -82,7 +113,7 @@ public class SalesService {
         db.update("INSERT INTO crm_opportunity(id,tenant_id,customer_id,source_lead_id,title,owner_member_id,amount_cents,close_date,next_action,description) VALUES(:id,:tenant,:customer,:lead,:title,:owner,:amount,:date,:next,:description)",p);
         history(a,created,null,"CONTACT","创建商机",text(input.nextAction()),input.amountCents(),null,0);audit(a,"OPPORTUNITY_CREATED","OPPORTUNITY",created,0,trace);return created;
     });return opportunity(a,id);});}
-    public Map<String,Object> editOpportunity(AuthService.Session s,UUID id,OpportunityEdit input,UUID trace){return scoped(s,"opportunity",true,a->{opportunityWrite(a,id,false);var current=opportunity(a,id);recipient(a,input.ownerMemberId(),(UUID)current.get("customerId"),null);var p=opportunityParams(a,id,input.title(),input.ownerMemberId(),input.amountCents(),input.closeDate(),input.nextAction(),input.description());p.put("version",input.expectedVersion());int changed=db.update("UPDATE crm_opportunity SET title=:title,owner_member_id=:owner,amount_cents=:amount,close_date=:date,next_action=:next,description=:description,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version AND stage NOT IN ('WON','LOST')",p);if(changed!=1)throw ApiError.conflict("商机已变化，请刷新后保存");audit(a,"OPPORTUNITY_UPDATED","OPPORTUNITY",id,input.expectedVersion()+1,trace);return opportunity(a,id);});}
+    public Map<String,Object> editOpportunity(AuthService.Session s,UUID id,OpportunityEdit input,UUID trace){return scoped(s,"opportunity",true,a->{opportunityWrite(a,id,false);var current=opportunity(a,id);var check=params(a);check.put("id",id);if(db.queryForObject("SELECT count(*) FROM crm_opportunity_line WHERE tenant_id=:tenant AND opportunity_id=:id",check,Integer.class)>0&&!Objects.equals(current.get("amountCents"),input.amountCents()))throw ApiError.conflict("预计金额由产品明细汇总，请在明细中调整");recipient(a,input.ownerMemberId(),(UUID)current.get("customerId"),null);var p=opportunityParams(a,id,input.title(),input.ownerMemberId(),input.amountCents(),input.closeDate(),input.nextAction(),input.description());p.put("version",input.expectedVersion());int changed=db.update("UPDATE crm_opportunity SET title=:title,owner_member_id=:owner,amount_cents=:amount,close_date=:date,next_action=:next,description=:description,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version AND stage NOT IN ('WON','LOST')",p);if(changed!=1)throw ApiError.conflict("商机已变化，请刷新后保存");audit(a,"OPPORTUNITY_UPDATED","OPPORTUNITY",id,input.expectedVersion()+1,trace);return opportunity(a,id);});}
     public static void transition(String from,StageInput input){
         int f=STAGES.indexOf(from),t=STAGES.indexOf(input.stage());if(f<0||t<0||closed(from)||from.equals(input.stage())||!(input.stage().equals("LOST")||input.stage().equals("WON")&&from.equals("READY")||t<5&&Math.abs(f-t)==1))throw ApiError.bad("阶段需逐步推进或回退，签约准备后才能成交；关闭后不能重开");
         if(text(input.reason()).isEmpty())throw ApiError.bad("请填写阶段变更原因");
@@ -91,11 +122,22 @@ public class SalesService {
         if(!closed(input.stage())&&text(input.nextAction()).isEmpty())throw ApiError.bad("未结束的商机需填写下一步");
     }
     public Map<String,Object> stage(AuthService.Session s,UUID id,StageInput input,String key,UUID trace){return scoped(s,"opportunity",true,a->{UUID result=once(a,"opportunity.stage",key,new TargetRequest(id,input),()->{
-        opportunityWrite(a,id,false);var current=opportunity(a,id);if(((Number)current.get("version")).longValue()!=input.expectedVersion())throw ApiError.conflict("商机已变化，请刷新后推进");transition((String)current.get("stage"),input);
+        opportunityWrite(a,id,false);var current=opportunity(a,id);if(((Number)current.get("version")).longValue()!=input.expectedVersion())throw ApiError.conflict("商机已变化，请刷新后推进");transition((String)current.get("stage"),input);qualifyStage(a,id,input.stage());
         var p=params(a);p.put("id",id);p.put("version",input.expectedVersion());p.put("stage",input.stage());p.put("actual",input.actualAmountCents());p.put("next",closed(input.stage())?"":text(input.nextAction()));p.put("closed",closed(input.stage()));
         int changed=db.update("UPDATE crm_opportunity SET stage=:stage,actual_amount_cents=:actual,next_action=:next,closed_at=CASE WHEN :closed THEN now() ELSE NULL END,version=version+1,updated_at=now() WHERE tenant_id=:tenant AND id=:id AND version=:version",p);if(changed!=1)throw ApiError.conflict("商机已变化，请刷新后推进");
         history(a,id,(String)current.get("stage"),input.stage(),text(input.reason()),(String)p.get("next"),((Number)current.get("amountCents")).longValue(),input.actualAmountCents(),input.expectedVersion()+1);audit(a,"OPPORTUNITY_STAGE_CHANGED","OPPORTUNITY",id,input.expectedVersion()+1,trace);return id;
     });return opportunity(a,result);});}
+    private void qualifyStage(AuthService.Actor a,UUID id,String target){
+        var p=params(a);p.put("id",id);p.put("stage",target);
+        int active=db.queryForObject("SELECT count(*) FROM crm_process_stage WHERE tenant_id=:tenant AND process_type='OPPORTUNITY' AND stage_code=:stage AND active",p,Integer.class);
+        if(active==0)throw ApiError.conflict("目标阶段已在行业配置中停用");
+        if(!Set.of("SOLUTION","NEGOTIATION","READY","WON").contains(target))return;
+        if(db.queryForObject("SELECT count(*) FROM crm_opportunity_line WHERE tenant_id=:tenant AND opportunity_id=:id",p,Integer.class)==0)throw ApiError.conflict("进入方案及后续阶段前，请维护商机产品明细");
+        if(!Set.of("READY","WON").contains(target))return;
+        p.put("today",LocalDate.now(ZoneId.of("Asia/Shanghai")));
+        int approved=db.queryForObject("SELECT count(*) FROM crm_quote q WHERE q.tenant_id=:tenant AND q.opportunity_id=:id AND q.status='APPROVED' AND q.valid_until>=:today AND EXISTS(SELECT 1 FROM crm_quote_approval ap WHERE ap.tenant_id=q.tenant_id AND ap.quote_id=q.id AND ap.status='APPROVED' AND ap.decision_version=q.version)",p,Integer.class);
+        if(approved==0)throw ApiError.conflict("进入签约准备或成交前，需要该商机有效且已批准的报价");
+    }
     private void history(AuthService.Actor a,UUID id,String from,String to,String reason,String next,long amount,Long actual,long version){var p=params(a);p.put("id",UUID.randomUUID());p.put("opportunity",id);p.put("from",from);p.put("to",to);p.put("reason",reason);p.put("next",next);p.put("amount",amount);p.put("actual",actual);p.put("version",version);db.update("INSERT INTO crm_opportunity_history(id,tenant_id,opportunity_id,from_stage,to_stage,reason,next_action,amount_cents,actual_amount_cents,actor_member_id,business_version) VALUES(:id,:tenant,:opportunity,:from,:to,:reason,:next,:amount,:actual,:member,:version)",p);}
     public BusinessService.Page<Map<String,Object>> history(AuthService.Session s,UUID id,int page,int size){page(page,size,"");return scoped(s,"opportunity",false,a->{opportunity(a,id);var p=params(a);p.put("id",id);p.put("limit",size);p.put("offset",((long)page-1)*size);long count=db.queryForObject("SELECT count(*) FROM crm_opportunity_history WHERE tenant_id=:tenant AND opportunity_id=:id",p,Long.class);return new BusinessService.Page<>(rows("SELECT h.*,m.display_name AS actor_name FROM crm_opportunity_history h JOIN sys_tenant_member m ON m.tenant_id=h.tenant_id AND m.id=h.actor_member_id WHERE h.tenant_id=:tenant AND h.opportunity_id=:id ORDER BY h.business_version DESC,h.id LIMIT :limit OFFSET :offset",p),page,size,count);});}
     private static final String LINK_READ="(x.customer_id IS NULL OR (:customerReader AND "+CustomerService.READ+")) AND (x.opportunity_id IS NULL OR ("+OP_READ+"))";

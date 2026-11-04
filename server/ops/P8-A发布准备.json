@@ -1,0 +1,35 @@
+{
+  "version": "0.22.0",
+  "schema": 29,
+  "codeCommit": "de18f4d7dcd3e08f72cd6244ce3c2efcf54a2ca1",
+  "environment": "crm-test",
+  "environmentId": "415d5c14-f4c6-418f-8387-019e6cb1f14c",
+  "apiServiceId": "5de432e5-b90a-4f2e-ae7c-149619956985",
+  "backupServiceId": "2376373d-f291-4c8c-8e4b-686f7e4cd4b5",
+  "startScriptSha256": "8708ccddca658dec1ea9b6c781315e7ac185e45795ac10cddf48d630b0a89660",
+  "backupScriptSha256": "d9ed2ca73773429a82d4f45e05f77bf2f2f3a00f6c2bed7748b033081259fb2c",
+  "backupScheduleUtc": "0 18 * * *",
+  "defaultProvider": "DEEPSEEK",
+  "aiEnabled": false,
+  "supplierKeyProvided": false,
+  "releaseArchive": "pending CI",
+  "status": "Application CI passed; four offline transport tests passed; Railway deployments still paused",
+  "releaseSteps": [
+    "Verify terminal GitHub CI success and download its private release artifact",
+    "Verify archive SHA256 and upload privately using existing bucket credentials",
+    "Update backup script and retain current backup schedule",
+    "Set release object key/checksum/version and private startup wrapper in crm-test",
+    "Create a fresh pinned-image deployment; do not reuse an old snapshot",
+    "Observe deployment SUCCESS, health 0.22.0 and Flyway V29",
+    "Verify authenticated UI and run V29 encrypted backup plus disposable restore"
+  ],
+  "preserve": [
+    "CRM_RELEASE_* rollback fragments",
+    "Existing database and encryption keys",
+    "Existing business records",
+    "AI disabled until supplier account is configured"
+  ],
+  "workflowRun": 39594818425,
+  "releaseArchiveSha256": "30e30e68a74ea201056aba07b3a7c1ab4bdbd95c221399e95d8c298e8a018969",
+  "transport": "Verified source fragments bootstrap a private S3 object using runtime-owned storage credentials; later starts read the object"
+}

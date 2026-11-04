@@ -1,0 +1,63 @@
+name: Temporary online CRM acceptance
+on:
+  pull_request:
+    types: [labeled]
+permissions:
+  contents: read
+concurrency:
+  group: crm-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: >-
+      github.event.label.name == 'crm-online-preview' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'ui/dark-glass-workspace' &&
+      github.event.pull_request.user.login == github.repository_owner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      CRM_REVIEW_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Check the bounded temporary preview configuration
+        run: python3 -m unittest discover -s server/test-support -p test_review_preview.py -v
+      - name: Prepare new private credentials and strict HTTPS settings
+        run: python3 server/ops/preview/prepare.py --base-url https://preview-pending.invalid
+      - name: Build the existing real Java application and private storage
+        run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml build
+      - name: Start only this fresh synthetic acceptance stack
+        run: docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml up -d --no-build
+      - name: Build the fixed public Chinese PDF font
+        run: |
+          python3 -m venv .review-font-venv
+          .review-font-venv/bin/pip install 'fonttools==4.61.1'
+          .review-font-venv/bin/python server/ops/vm/prepare_font.py
+      - name: Install the verified font into this preview's private bucket
+        run: >-
+          docker compose --env-file .crm-preview/compose.env -f compose.preview.yaml
+          run --rm --no-deps --entrypoint python3
+          --volume "$PWD/vm-assets/quote-font.ttf:/opt/crm-font.ttf:ro"
+          --volume "$PWD/server/ops/vm/publish_vm_font.py:/opt/crm-publish-font.py:ro"
+          storage-init /opt/crm-publish-font.py
+      - name: Open verified public HTTPS and validate the actual application
+        run: python3 server/ops/preview/review.py start
+      - uses: actions/upload-artifact@v4
+        with:
+          name: review-access
+          path: review-output/access.json
+          retention-days: 1
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: review-readiness
+          path: review-output/readiness.json
+          retention-days: 1
+          if-no-files-found: error
+      - name: Keep the synthetic acceptance preview available until its advertised deadline
+        run: python3 server/ops/preview/review.py hold
+      - name: Remove only this hosted runner's temporary tunnel, containers and data
+        if: always()
+        run: python3 server/ops/preview/review.py stop

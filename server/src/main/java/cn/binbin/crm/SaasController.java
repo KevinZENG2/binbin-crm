@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*;
 public class SaasController {
     public record PasswordInput(@NotBlank @Size(max=72) String oldPassword,@NotBlank @Size(max=72) String newPassword) {}
     public record ResetInput(@NotBlank @Size(max=72) String newPassword) {}
-    private final AuthService auth;private final SaasService service;
-    public SaasController(AuthService auth,SaasService service){this.auth=auth;this.service=service;}
+    private final AuthService auth;private final SaasService service;private final SalesFoundationService foundation;
+    public SaasController(AuthService auth,SaasService service,SalesFoundationService foundation){this.auth=auth;this.service=service;this.foundation=foundation;}
     private AuthService.Session platform(HttpServletRequest r){var s=auth.authenticate(r);auth.platform(s);if(!r.getMethod().equals("GET"))auth.csrf(s,r);return s;}
     private AuthService.Session workspace(HttpServletRequest r){var s=auth.workspace(r);if(!r.getMethod().equals("GET"))auth.csrf(s,r);return s;}
     @PostMapping("/auth/password") public ResponseEntity<?> password(@Valid @RequestBody PasswordInput input,HttpServletRequest r,HttpServletResponse response){var s=auth.authenticate(r);auth.csrf(s,r);auth.changePassword(s,input.oldPassword(),input.newPassword(),RequestSafety.trace(r));response.addHeader("Set-Cookie",ResponseCookie.from("CRM_SESSION","").path("/api/v1").httpOnly(true).secure(true).sameSite("Lax").maxAge(0).build().toString());return ResponseEntity.noContent().build();}
@@ -51,4 +51,8 @@ public class SaasController {
     @PostMapping("/workspace/support/grants/{id}/revoke") public ResponseEntity<?> revokeSupport(@PathVariable UUID id,HttpServletRequest r){service.revokeSupport(workspace(r),id,RequestSafety.trace(r));return ResponseEntity.noContent().build();}
     @GetMapping("/workspace/support/grants/{id}/access") public Object supportAccess(@PathVariable UUID id,HttpServletRequest r){return service.supportAccess(workspace(r),id);}
     @GetMapping("/workspace/audits") public Object audits(HttpServletRequest r){return service.audits(workspace(r),false);}
+    @GetMapping("/workspace/sales-resource-policies") public Object resourcePolicies(HttpServletRequest r){return foundation.policies(workspace(r));}
+    @PutMapping("/workspace/sales-resource-policies/{member}") public Object resourcePolicy(@PathVariable UUID member,@Valid @RequestBody SalesFoundationService.PolicyInput input,HttpServletRequest r){return foundation.save(workspace(r),member,input,RequestSafety.trace(r));}
+    @GetMapping("/workspace/resource-alerts") public Object resourceAlerts(HttpServletRequest r){return foundation.alerts(workspace(r));}
+    @PostMapping("/workspace/resource-alerts/{id}/read") public ResponseEntity<?> readResourceAlert(@PathVariable UUID id,HttpServletRequest r){foundation.readAlert(workspace(r),id);return ResponseEntity.noContent().build();}
 }

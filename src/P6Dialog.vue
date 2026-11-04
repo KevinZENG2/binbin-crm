@@ -1,0 +1,7 @@
+<script setup lang="ts">
+import {nextTick,onMounted,onUnmounted,ref} from 'vue';
+defineProps<{title:string;busy?:boolean}>();const emit=defineEmits<{close:[]}>();const box=ref<HTMLElement|null>(null);let prior:HTMLElement|null=null,overflow='';
+function keys(e:KeyboardEvent){if(e.key==='Escape')emit('close');if(e.key!=='Tab')return;const list=box.value?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]');if(!list?.length)return;const first=list[0],last=list[list.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
+onMounted(async()=>{prior=document.activeElement as HTMLElement;overflow=document.body.style.overflow;document.body.style.overflow='hidden';document.addEventListener('keydown',keys);await nextTick();box.value?.querySelector<HTMLElement>('button,input,select')?.focus();});onUnmounted(()=>{document.body.style.overflow=overflow;document.removeEventListener('keydown',keys);prior?.focus({preventScroll:true});});
+</script>
+<template><Teleport to="body"><div class="p6-backdrop" @click.self="!busy&&emit('close')"><section ref="box" class="p6-dialog p6" role="dialog" aria-modal="true" aria-labelledby="p6-dialog-title"><header><h2 id="p6-dialog-title">{{title}}</h2><button class="btn secondary" type="button" :disabled="busy" @click="emit('close')">关闭</button></header><div class="p6-dialog-body"><slot/></div></section></div></Teleport></template>

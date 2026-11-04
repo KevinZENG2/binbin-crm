@@ -1,0 +1,53 @@
+{
+  "version": "0.23.0",
+  "clientDate": "2026-10-26",
+  "hostingMode": "managed-cloud-preview",
+  "userServerDeployment": false,
+  "subscriptionActive": false,
+  "blocker": "Railway trial resource creation limit; new project requires Hobby subscription",
+  "billing": {
+    "provider": "Railway",
+    "plan": "Hobby",
+    "minimumMonthlyUsd": 5,
+    "includedUsageUsd": 5,
+    "usageAboveIncludedIsExtra": true,
+    "upfrontUsdShown": 5,
+    "subscriptionSubmitted": false,
+    "userMustEnterPaymentDetails": true
+  },
+  "resourcesAfterBillingAuthorization": [
+    {"name": "crm-api", "runtime": "Java 21", "maximumMemoryMb": 1024, "publicAccess": "HTTPS CRM with existing authentication"},
+    {"name": "Postgres", "runtime": "PostgreSQL 18", "volumeMb": 500, "publicAccess": false},
+    {"name": "crm-backup", "runtime": "PostgreSQL 18 backup/restore worker", "publicAccess": false}
+  ],
+  "dataMigration": {
+    "sourceEnvironment": "crm-test",
+    "sourceDatabaseMustNotBeOverwritten": true,
+    "verifiedBackupJobId": "63bad5e5-4646-48aa-8f90-c2793e2ae614",
+    "encryptedBackupSha256": "67cc4d6168b4ab5f18c7fe043e39669dc136a1ccbda07fd04fddf00b3238b7a1",
+    "backupMigration": 28,
+    "targetDatabase": "crm_restore_p8_20261026",
+    "targetObjectPrefix": "restore-p8-20261026",
+    "targetMustBeEmpty": true,
+    "restoreProgram": "server/ops/restore_backup.py",
+    "sourceCredentialsIncludedInThisFile": false,
+    "newCloudRestoreExecuted": false
+  },
+  "release": {
+    "sourceArtifactId": 12476345517,
+    "bytes": 515954,
+    "sha256": "d4da837ba424c73d2d6fed1ee3c02b09a0e42ac4aa29e515673fb56500ab4ea8",
+    "migration": 30,
+    "privateObjectKey": "system/releases/crm/0.23.0-d4da837ba424c73d.tgz",
+    "signedBootstrapUrlMustBeRefreshedBeforeDeploy": true,
+    "aiEnabled": false,
+    "liveDeploymentCompleted": false
+  },
+  "acceptanceBeforeReportingSuccess": [
+    "Encrypted backup authentication and SHA-256 checks",
+    "Restore only into a confirmed empty database and new attachment namespace",
+    "Cloud deployment terminal success and public health version 0.23.0",
+    "V30 migrations, forced RLS, enterprise and platform login, portal access boundary",
+    "Attachment and Chinese PDF checks, followed by a fresh encrypted backup and restore rehearsal"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "phase": "P8-A UI",
+  "passed": 5,
+  "checks": [
+    "Enterprise admin enters AI settings from the left navigation and saves policy",
+    "AI settings fit a 390px mobile viewport",
+    "AI assistant displays actual redacted content before sending",
+    "Product operator has a separate model and plan-budget management entry",
+    "No browser runtime exceptions"
+  ]
+}

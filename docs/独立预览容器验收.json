@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-22T08:16:08.645244+00:00",
+  "applicationVersion": "0.23.0",
+  "migration": 30,
+  "syntheticOnly": true,
+  "cloudDeployment": false,
+  "checks": [
+    "Containerized 0.23.0 serves a ready database-backed health endpoint",
+    "Java application runs as non-root user 10001",
+    "Database migration reached V30",
+    "Runtime database connection validates TLS",
+    "Runtime role has no superuser, RLS bypass, role creation or database creation",
+    "Runtime sees no customer rows without a tenant context",
+    "Runtime tenant context selects only its own synthetic rows",
+    "Business RLS is forced and owned by the migration role",
+    "Anonymous business and AI requests remain protected",
+    "Enterprise login and tenant selection work",
+    "Cross-tenant records and platform administration stay isolated",
+    "All twelve P8 scenarios are present in the container",
+    "New AI scenarios remain closed before a pilot release",
+    "Java S3 client uploads and downloads through verified HTTPS",
+    "Private attachments enforce authentication, record and tenant boundaries",
+    "Database, session and private attachment survive a stack restart"
+  ],
+  "passed": 16,
+  "status": "SUCCESS"
+}

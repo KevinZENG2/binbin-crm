@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-21T13:01:36.143955+00:00",
+  "provider": "DEEPSEEK",
+  "model": "deepseek-flash",
+  "availableModels": [
+    "deepseek-flash",
+    "deepseek-v4-pro"
+  ],
+  "modelListHttpStatus": 200,
+  "chatCompletionHttpStatus": 200,
+  "expectedReplyReceived": true,
+  "inputTokens": 21,
+  "outputTokens": 2,
+  "usageReported": true,
+  "testInput": "仅使用虚拟连接测试文本，无真实客户资料",
+  "keyStorage": "Railway crm-test / crm-java-api backend environment only",
+  "keyStoredForNextDeployment": true,
+  "liveCrmBusinessPathVerified": false,
+  "aiMasterEnabled": false,
+  "note": "Direct supplier connectivity smoke test succeeded. Production CRM flow and supplier invoice reconciliation remain pending deployment. No credentials are recorded."
+}
